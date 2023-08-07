@@ -1,0 +1,77 @@
+header_include_path: aruco_detector/aruco_detector.hpp
+namespace: ArucoDetector
+node_class_name: ArucoDetectorNode
+
+params:
+  aruco_side:
+    type: double
+    default_value: 0.1
+    min_value: 0.0
+    max_value: 2.0
+    step: 0.01
+    description: "Aruco side in meters."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: aruco_side
+
+  base_frame:
+    type: string
+    default_value: seppia/base_footprint
+    description: "Agent base link frame id ."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: base_frame
+
+  centering_width:
+    type: integer
+    default_value: 100
+    min_value: 0
+    max_value: 10000
+    step: 1
+    description: ""
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: centering_width
+
+  compute_position:
+    type: bool
+    default_value: false
+    description: ""
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: compute_position
+
+  error_min:
+    type: double
+    default_value: 0.01
+    min_value: 0.0
+    max_value: 2.0
+    step: 0.01
+    description: ""
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: error_min
+
+  node_namespace:
+    type: string
+    default_value: /seppia
+    description: "Namespace for the outgoing messages."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: node_namespace
+
+  rotate_image:
+    type: bool
+    default_value: false
+    description: ""
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: rotate_image
+
+  transport:
+    type: string
+    default_value: raw
+    description: "Image transport protocol."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: transport

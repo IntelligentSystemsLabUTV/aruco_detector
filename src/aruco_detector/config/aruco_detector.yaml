@@ -1,0 +1,10 @@
+/aruco_detector:
+  ros__parameters:
+    aruco_side: 0.51
+    base_frame: seppia/base_footprint
+    centering_width: 150
+    compute_position: true
+    error_min: 0.13
+    node_namespace: /seppia
+    rotate_image: true
+    transport: compressed
