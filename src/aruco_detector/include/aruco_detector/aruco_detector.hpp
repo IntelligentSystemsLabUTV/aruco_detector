@@ -117,13 +117,17 @@ private:
   /* Node parameters */
   double aruco_side = 0.0;
   std::string base_frame = "";
+  bool best_effort_sub_qos = false;
   double camera_offset = 0.0;
   std::string camera_topic = "";
   int64_t centering_width = 0;
   bool compute_position = false;
   double error_min = 0.0;
-  int focal_length = 0;
+  int64_t focal_length = 0;
+  int64_t image_sub_depth = 0;
+  std::vector<std::string> input_topics = {""};
   std::string node_namespace = "";
+  std::string output_topic = "";
   bool rotate_image = false;
   std::string transport = "";
 

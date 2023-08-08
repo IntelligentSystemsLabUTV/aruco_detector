@@ -39,14 +39,16 @@ generate_init_parameters(
   YAML_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/aruco_detector/params.yaml"
   OUT_FILE "init_parameters.cpp")
 
-# Aruco Detector standalone application
-add_executable(aruco_detector
-  src/aruco_detector/aruco_detector.cpp
-  src/aruco_detector/ad_services.cpp
-  src/aruco_detector/ad_subscriptions.cpp
-  src/aruco_detector/ad_utils.cpp
-  init_parameters.cpp
-  src/aruco_detector_app.cpp)
+# Configure Aruco Detector node source files
+file(GLOB ARUCO_DETECTOR_NODE_SRCS
+  RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+  "src/aruco_detector/*.cpp")
+list(APPEND ARUCO_DETECTOR_NODE_SRCS init_parameters.cpp)
+
+
+# Aruco Detector node
+add_library(aruco_detector SHARED ${ARUCO_DETECTOR_NODE_SRCS})
+target_compile_definitions(aruco_detector PRIVATE COMPOSITION_BUILDING_DLL)
 target_include_directories(aruco_detector PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -66,9 +68,27 @@ ament_target_dependencies(
   "sensor_msgs"
   "std_msgs"
   "std_srvs")
+rclcpp_components_register_nodes(aruco_detector "ArucoDetector::ArucoDetectorNode")
+
+# Aruco Detector standalone application
+add_executable(aruco_detector_app
+  src/aruco_detector_app.cpp)
+target_include_directories(aruco_detector_app PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_link_libraries(aruco_detector_app aruco_detector)
+ament_target_dependencies(aruco_detector_app
+  "dua_app_management"
+  "rclcpp")
+
+# Install Teraranger component
+install(TARGETS aruco_detector
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
 
 # Aruco Detector app
-install(TARGETS aruco_detector
+install(TARGETS aruco_detector_app
   DESTINATION lib/${PROJECT_NAME})
 
 # Config files
@@ -89,5 +109,8 @@ if(BUILD_TESTING)
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+# Make sure that the library path is exported even if the library itself is not
+ament_environment_hooks("${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH}")
 
 ament_package()

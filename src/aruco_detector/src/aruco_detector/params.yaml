@@ -14,13 +14,21 @@ params:
     read_only: true
     var_name: aruco_side
 
-  base_frame:
-    type: string
-    default_value: seppia/base_footprint
-    description: "Agent base link frame id ."
+  best_effort_sub_qos:
+    type: bool
+    default_value: false
+    description: "Whether to subscribe to the input topics with a best effort QoS."
     constraints: "Cannot be changed."
     read_only: true
-    var_name: base_frame
+    var_name: best_effort_sub_qos
+
+  compute_position:
+    type: bool
+    default_value: false
+    description: ""
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: compute_position
 
   centering_width:
     type: integer
@@ -51,6 +59,34 @@ params:
     constraints: "Cannot be changed."
     read_only: true
     var_name: error_min
+
+  image_sub_depth:
+    type: integer
+    default_value: 1
+    min_value: 0
+    max_value: 100
+    step: 1
+    description: "QoS profile depth for the image subscription."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: image_sub_depth
+
+  input_topics:
+    type: string_array
+    default_value:
+      - /input_topic
+    description: "Cameras topics names to subscribe to."
+    constraints: "Must be a valid array of strings. Cannot be changed."
+    read_only: true
+    var_name: input_topics
+
+  output_topic:
+    type: string
+    default_value: /output_topic
+    description: "Topic name to publish markers data on."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: output_topic
 
   node_namespace:
     type: string

@@ -2,9 +2,16 @@
   ros__parameters:
     aruco_side: 0.51
     base_frame: seppia/base_footprint
+    best_effort_sub_qos: true
     centering_width: 150
     compute_position: true
     error_min: 0.13
+    image_sub_depth: 12
+    input_topics:
+      - /seppia/camera/image_raw
+      - /seppia/camera/image_raw/compressed
+      - /seppia/camera/image_raw/compressed/parameter_descriptions
     node_namespace: /seppia
+    output_topic: /aruco_output
     rotate_image: true
     transport: compressed
