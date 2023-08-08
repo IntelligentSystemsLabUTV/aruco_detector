@@ -8,7 +8,7 @@ if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
 
-# Default to C++14
+# Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
@@ -49,15 +49,19 @@ list(APPEND ARUCO_DETECTOR_NODE_SRCS init_parameters.cpp)
 # Aruco Detector node
 add_library(aruco_detector SHARED ${ARUCO_DETECTOR_NODE_SRCS})
 target_compile_definitions(aruco_detector PRIVATE COMPOSITION_BUILDING_DLL)
+if (CUDA_FOUND AND OpenCV_CUDA_VERSION)
+  message(STATUS "OpenCV was built with CUDA version: ${OpenCV_CUDA_VERSION}")
+  message(STATUS "Compiling code with cv::cuda API")
+  target_compile_definitions(aruco_detector PUBLIC WITH_CUDA)
+endif()
 target_include_directories(aruco_detector PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(
-  aruco_detector
+target_compile_features(aruco_detector PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_link_libraries(aruco_detector
   ${OpenCV_LIBS}
   Threads::Threads)
-ament_target_dependencies(
-  aruco_detector
+ament_target_dependencies(aruco_detector
   "dua_app_management"
   "dua_node"
   "dua_qos"
@@ -76,6 +80,7 @@ add_executable(aruco_detector_app
 target_include_directories(aruco_detector_app PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+target_compile_features(usb_camera_app PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 target_link_libraries(aruco_detector_app aruco_detector)
 ament_target_dependencies(aruco_detector_app
   "dua_app_management"
@@ -87,15 +92,15 @@ install(TARGETS aruco_detector
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
-# Aruco Detector app
+# Install Aruco Detector app
 install(TARGETS aruco_detector_app
   DESTINATION lib/${PROJECT_NAME})
 
-# Config files
+# Install Config files
 install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME})
 
-# Launch files
+# Install Launch files
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})
 
