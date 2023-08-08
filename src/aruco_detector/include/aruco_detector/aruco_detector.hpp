@@ -72,7 +72,6 @@ private:
   void init_cgroups();
   void init_parameters();
   void init_publishers();
-  void init_services();
   void init_subscriptions();
 
   /* Topic subscriptions callback groups */
@@ -95,24 +94,12 @@ private:
   /* image_transport publishers */
   image_transport::Publisher target_img_pub_;
 
-  /* Service servers callback groups */
-  rclcpp::CallbackGroup::SharedPtr enable_cgroup_;
-
-  /* Service servers */
-  rclcpp::Service<SetBool>::SharedPtr enable_server_;
-
-  /* Service callbacks */
-  void enable_callback(
-    SetBool::Request::SharedPtr req,
-    SetBool::Response::SharedPtr resp);
-
   /* Data buffers */
   cv::Mat camera_frame_;
   std::vector<cv::Point> aruco_centers_;
 
   /* Internal state variables */
   uint8_t camera_id_ = 0;
-  bool is_on_ = false;
 
   /* Node parameters */
   double aruco_side = 0.0;

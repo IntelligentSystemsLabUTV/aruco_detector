@@ -54,9 +54,6 @@ ArucoDetectorNode::ArucoDetectorNode(const rclcpp::NodeOptions & node_options)
   // Initialize topic subscriptions
   init_subscriptions();
 
-  // Initialize services
-  init_services();
-
   RCLCPP_INFO(this->get_logger(), "Node initialized");
 }
 
@@ -66,10 +63,7 @@ ArucoDetectorNode::ArucoDetectorNode(const rclcpp::NodeOptions & node_options)
 ArucoDetectorNode::~ArucoDetectorNode()
 {
   // Unsubscribe from image topics
-  if (is_on_) {
-    camera_sub_.shutdown();
-    is_on_ = false;
-  }
+  camera_sub_.shutdown();
   target_img_pub_.shutdown();
 }
 
@@ -79,7 +73,6 @@ ArucoDetectorNode::~ArucoDetectorNode()
 void ArucoDetectorNode::init_cgroups()
 {
   pose_cgroup_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  enable_cgroup_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 }
 
 /**
@@ -120,23 +113,6 @@ void ArucoDetectorNode::init_publishers()
     this,
     "~/targets/image_rect_color",
     rmw_qos_profile_sensor_data); // FIXME: use DUAQoS::get_datum_qos() instead
-}
-
-/**
- * @brief Routine to initialize service servers.
- */
-void ArucoDetectorNode::init_services()
-{
-  // Enable
-  enable_server_ = this->create_service<SetBool>(
-    "~/enable",
-    std::bind(
-      &ArucoDetectorNode::enable_callback,
-      this,
-      std::placeholders::_1,
-      std::placeholders::_2),
-    rmw_qos_profile_services_default,
-    enable_cgroup_);
 }
 
 } // namespace ArucoDetector
