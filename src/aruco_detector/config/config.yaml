@@ -1,4 +1,4 @@
-/aruco_detector:
+/seppia/aruco_detector:
   ros__parameters:
     aruco_side: 0.51
     base_frame: seppia/base_footprint
