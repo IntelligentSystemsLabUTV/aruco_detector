@@ -87,6 +87,24 @@ void ArucoDetectorNode::init_cgroups()
  */
 void ArucoDetectorNode::init_subscriptions()
 {
+  if (autostart)
+  {
+    is_on_ = true;
+
+    // Subscribe to image topic
+    camera_sub_ = image_transport::create_camera_subscription(
+      this,
+      input_topic,
+      std::bind(
+        &ArucoDetectorNode::camera_callback,
+        this,
+        std::placeholders::_1),
+      transport,
+      best_effort_sub_qos ?
+        DUAQoS::Visualization::get_image_qos(image_sub_depth).get_rmw_qos_profile() :
+        DUAQoS::get_image_qos(image_sub_depth).get_rmw_qos_profile());
+  }
+
   // Drone pose
   // auto pose_sub_opts = rclcpp::SubscriptionOptions();
   // pose_sub_opts.callback_group = pose_cgroup_;
@@ -120,6 +138,8 @@ void ArucoDetectorNode::init_publishers()
     this,
     "~/targets/image_rect_color",
     rmw_qos_profile_sensor_data); // FIXME: use DUAQoS::get_datum_qos() instead
+
+  // TODO: theora publisher
 }
 
 /**

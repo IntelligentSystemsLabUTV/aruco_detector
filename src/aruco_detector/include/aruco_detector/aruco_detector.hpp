@@ -82,7 +82,7 @@ private:
   // rclcpp::Subscription<Pose>::SharedPtr pose_sub_;
 
   /* image_transport subscriptions */
-  image_transport::Subscriber camera_sub_;
+  image_transport::CameraSubscriber camera_sub_;
 
   /* Topic subscriptions callbacks */
   void camera_callback(const Image::ConstSharedPtr & msg);
@@ -116,6 +116,7 @@ private:
 
   /* Node parameters */
   double aruco_side = 0.0;
+  bool autostart = false;
   std::string base_frame = "";
   bool best_effort_sub_qos = false;
   double camera_offset = 0.0;
@@ -125,7 +126,7 @@ private:
   double error_min = 0.0;
   int64_t focal_length = 0;
   int64_t image_sub_depth = 0;
-  std::vector<std::string> input_topics = {""};
+  std::string input_topic = "";
   std::string node_namespace = "";
   std::string output_topic = "";
   bool rotate_image = false;

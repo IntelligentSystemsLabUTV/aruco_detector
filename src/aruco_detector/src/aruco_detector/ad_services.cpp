@@ -41,15 +41,17 @@ void ArucoDetectorNode::enable_callback(
 {
   if (req->data) {
     if (!is_on_) {
-      camera_sub_ = image_transport::create_subscription(
+      camera_sub_ = image_transport::create_camera_subscription(
         this,
-        camera_topic,
+        input_topic,
         std::bind(
           &ArucoDetectorNode::camera_callback,
           this,
           std::placeholders::_1),
         transport,
-        rmw_qos_profile_sensor_data);
+        best_effort_sub_qos ?
+          DUAQoS::Visualization::get_image_qos(image_sub_depth).get_rmw_qos_profile() :
+          DUAQoS::get_image_qos(image_sub_depth).get_rmw_qos_profile());
       is_on_ = true;
       RCLCPP_WARN(this->get_logger(), "Detector ACTIVATED");
     }

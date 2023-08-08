@@ -80,7 +80,7 @@ add_executable(aruco_detector_app
 target_include_directories(aruco_detector_app PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(usb_camera_app PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(aruco_detector_app PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 target_link_libraries(aruco_detector_app aruco_detector)
 ament_target_dependencies(aruco_detector_app
   "dua_app_management"

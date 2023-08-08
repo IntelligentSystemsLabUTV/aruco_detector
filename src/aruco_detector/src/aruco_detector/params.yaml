@@ -14,6 +14,14 @@ params:
     read_only: true
     var_name: aruco_side
 
+  autostart:
+    type: bool
+    default_value: false
+    description: "Whether to start detection immediately."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: autostart
+
   best_effort_sub_qos:
     type: bool
     default_value: false
@@ -63,14 +71,13 @@ params:
     read_only: true
     var_name: image_sub_depth
 
-  input_topics:
-    type: string_array
-    default_value:
-      - /input_topic
-    description: "Cameras topics names to subscribe to."
-    constraints: "Must be a valid array of strings. Cannot be changed."
+  input_topic:
+    type: string
+    default_value: /input_topic
+    description: "Camera topic name to subscribe to."
+    constraints: "Cannot be changed."
     read_only: true
-    var_name: input_topics
+    var_name: input_topic
 
   output_topic:
     type: string
