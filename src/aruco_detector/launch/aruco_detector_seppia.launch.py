@@ -45,7 +45,7 @@ def generate_launch_description():
     # Create node launch description
     node = Node(
         package='aruco_detector',
-        executable='aruco_detector',
+        executable='aruco_detector_app',
         namespace=ns,
         exec_name='aruco_detector_app',
         emulate_tty=True,
