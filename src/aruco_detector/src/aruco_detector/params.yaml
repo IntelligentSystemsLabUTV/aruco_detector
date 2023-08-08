@@ -22,14 +22,6 @@ params:
     read_only: true
     var_name: best_effort_sub_qos
 
-  compute_position:
-    type: bool
-    default_value: false
-    description: ""
-    constraints: "Cannot be changed."
-    read_only: true
-    var_name: compute_position
-
   centering_width:
     type: integer
     default_value: 100
