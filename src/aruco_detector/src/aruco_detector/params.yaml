@@ -95,6 +95,14 @@ params:
     read_only: true
     var_name: node_namespace
 
+  stream_topic:
+    type: string
+    default_value: /stream_topic
+    description: "Topic name to publish theora stream on."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: stream_topic
+
   transport:
     type: string
     default_value: raw

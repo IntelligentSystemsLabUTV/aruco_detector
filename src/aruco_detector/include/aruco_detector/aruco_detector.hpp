@@ -28,24 +28,28 @@
 #define ARUCO_DETECTOR_HPP
 
 #include <memory>
-#include <opencv2/aruco.hpp>
-// #include <opencv2/aruco/dictionary.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
 #include <pthread.h>
 #include <vector>
 
 #include <dua_node/dua_node.hpp>
 #include <dua_qos/dua_qos.hpp>
 
+#include <opencv2/aruco.hpp>
+// #include <opencv2/aruco/dictionary.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+
 #include <rclcpp/rclcpp.hpp>
+
+#include <image_transport/image_transport.hpp>
+#include <image_transport/subscriber.hpp>
 
 #include <sensor_msgs/image_encodings.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <std_msgs/msg/empty.hpp>
 #include <std_srvs/srv/set_bool.hpp>
-#include <image_transport/image_transport.hpp>
-#include <image_transport/subscriber.hpp>
+
+#include <theora_wrappers/publisher.hpp>
 
 // #include <stanis_interfaces/msg/pose.hpp>
 // #include <stanis_interfaces/msg/target.hpp>
@@ -95,6 +99,9 @@ private:
   /* image_transport publishers */
   image_transport::Publisher target_img_pub_;
 
+  /* Theora stream publishers. */
+  std::shared_ptr<TheoraWrappers::Publisher> stream_pub_;
+
   /* Service servers callback groups */
   rclcpp::CallbackGroup::SharedPtr enable_cgroup_;
 
@@ -129,6 +136,7 @@ private:
   std::string input_topic = "";
   std::string node_namespace = "";
   std::string output_topic = "";
+  std::string stream_topic = "";
   std::string transport = "";
 
   /* Synchronization primitives for internal update operations */

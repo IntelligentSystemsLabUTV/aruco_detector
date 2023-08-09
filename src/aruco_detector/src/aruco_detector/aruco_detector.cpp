@@ -71,6 +71,7 @@ ArucoDetectorNode::~ArucoDetectorNode()
     is_on_ = false;
   }
   target_img_pub_.shutdown();
+  stream_pub_.reset();
 }
 
 /**
@@ -139,7 +140,11 @@ void ArucoDetectorNode::init_publishers()
     "~/targets/image_rect_color",
     rmw_qos_profile_sensor_data); // FIXME: use DUAQoS::get_datum_qos() instead
 
-  // TODO: theora publisher
+  // Theora publisher
+  stream_pub_ = std::make_shared<TheoraWrappers::Publisher>(
+    this,
+    stream_topic,
+    DUAQoS::Visualization::get_image_qos(image_sub_depth).get_rmw_qos_profile());
 }
 
 /**

@@ -33,6 +33,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(theora_wrappers REQUIRED)
 
 # Generate parameters source code
 generate_init_parameters(
@@ -71,7 +72,8 @@ ament_target_dependencies(aruco_detector
   "rclcpp"
   "sensor_msgs"
   "std_msgs"
-  "std_srvs")
+  "std_srvs"
+  "theora_wrappers")
 rclcpp_components_register_nodes(aruco_detector "ArucoDetector::ArucoDetectorNode")
 
 # Aruco Detector standalone application

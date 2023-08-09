@@ -11,4 +11,5 @@
     input_topic: /seppia/camera/image_raw
     node_namespace: /seppia
     output_topic: /aruco_output
+    stream_topic: /gui_1
     transport: compressed

@@ -36,7 +36,9 @@ namespace ArucoDetector
  */
 void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg)
 {
-  (void) msg;
+  stream_pub_->publish(msg);
+
+
   // // Get current drone pose
   // pose_lock_.lock();
   // // DronePose current_pose = pose_;
