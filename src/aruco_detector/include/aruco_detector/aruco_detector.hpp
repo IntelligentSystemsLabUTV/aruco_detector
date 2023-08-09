@@ -129,7 +129,6 @@ private:
   std::string input_topic = "";
   std::string node_namespace = "";
   std::string output_topic = "";
-  bool rotate_image = false;
   std::string transport = "";
 
   /* Synchronization primitives for internal update operations */

@@ -95,14 +95,6 @@ params:
     read_only: true
     var_name: node_namespace
 
-  rotate_image:
-    type: bool
-    default_value: false
-    description: ""
-    constraints: "Cannot be changed."
-    read_only: true
-    var_name: rotate_image
-
   transport:
     type: string
     default_value: raw

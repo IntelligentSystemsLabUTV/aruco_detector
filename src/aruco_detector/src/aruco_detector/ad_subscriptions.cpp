@@ -106,25 +106,6 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg)
 
   //   aruco_centers_.push_back(cv::Point(xc, yc));
 
-  //   // Detect in which side of the image the target lies
-  //   // if (rotate_image_) {
-  //   //   if (yc < (new_frame.size().height / 2) - (centering_width_ / 2)) {
-  //   //     target_msg.set__centering(Target::LEFT);
-  //   //   } else if (yc > (new_frame.size().height / 2) + (centering_width_ / 2)) {
-  //   //     target_msg.set__centering(Target::RIGHT);
-  //   //   } else {
-  //   //     target_msg.set__centering(Target::CENTER);
-  //   //   }
-  //   // } else {
-  //   //   if (xc < (new_frame.size().width / 2) - (centering_width_ / 2)) {
-  //   //     target_msg.set__centering(Target::LEFT);
-  //   //   } else if (xc > (new_frame.size().width / 2) + (centering_width_ / 2)) {
-  //   //     target_msg.set__centering(Target::RIGHT);
-  //   //   } else {
-  //   //     target_msg.set__centering(Target::CENTER);
-  //   //   }
-  //   // }
-
   //   // Compute target position w.r.t. the world NED reference frame
   //   if (compute_position_) {
   //     double ex_pixels = xc - (new_frame.size().width / 2);
@@ -173,10 +154,6 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg)
   //     3);
   // }
   // camera_frame_ = new_frame; // Doesn't copy image data, but sets data type...
-  // if (rotate_image_) {
-  //   // ... Which must be properly set here
-  //   cv::rotate(new_frame, camera_frame_, cv::ROTATE_90_COUNTERCLOCKWISE);
-  // }
   // cv::Point line_left_top(
   //   (camera_frame_.size().width / 2) - (centering_width_ / 2),
   //   0);

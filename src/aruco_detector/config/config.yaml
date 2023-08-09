@@ -8,11 +8,7 @@
     compute_position: true
     error_min: 0.13
     image_sub_depth: 12
-    input_topics:
-      - /seppia/camera/image_raw
-      - /seppia/camera/image_raw/compressed
-      - /seppia/camera/image_raw/compressed/parameter_descriptions
+    input_topic: /seppia/camera/image_raw
     node_namespace: /seppia
     output_topic: /aruco_output
-    rotate_image: true
     transport: compressed
