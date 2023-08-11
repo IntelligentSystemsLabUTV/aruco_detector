@@ -34,11 +34,9 @@ namespace ArucoDetector
  *
  * @param msg Image message to parse.
  */
-void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg)
+void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
+                                        const CameraInfo::ConstSharedPtr & camera_info_msg)
 {
-  stream_pub_->publish(msg);
-
-
   // // Get current drone pose
   // pose_lock_.lock();
   // // DronePose current_pose = pose_;
@@ -46,170 +44,164 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg)
   // double altitude = current_pose.z;
   // double yaw = current_pose.yaw;
 
-  // // Look for targets in the image
-  // cv::Mat new_frame(
-  //   msg->height,
-  //   msg->width,
-  //   CV_8UC3,
-  //   (void *)(msg->data.data()));
+  // Get camera parameters
+  if (get_calibration_params_)
+  {
+    cameraMatrix = cv::Mat(3, 3, cv::DataType<double>::type);
+    distCoeffs = cv::Mat(1, 5, cv::DataType<double>::type);
 
-  // // Detect targets
-  // std::vector<int> ids;
-  // std::vector<std::vector<cv::Point2f>> corners;
-  // cv::aruco::detectMarkers(
-  //   new_frame,
-  //   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL),
-  //   corners,
-  //   ids);
+    for (size_t i = 0; i < 3; i++)
+      for (size_t j = 0; j < 3; j++)
+        cameraMatrix.at<double>(i, j) = camera_info_msg->k[i*3+j];
 
-  // // Publish information about detected targets
-  // aruco_centers_.clear();
-  // for (int k = 0; k < int(ids.size()); k++) {
-  //   if (std::find(target_ids_.begin(), target_ids_.end(), ids[k]) == target_ids_.end()) {
-  //     continue;
-  //   }
+    for (size_t i = 0; i < 5; i++)
+      distCoeffs.at<double>(0, i) = camera_info_msg->d[i];
 
-  //   // Target target_msg{};
-  //   // target_msg.set__camera(camera_id_);
-  //   // target_msg.set__id(ids[k]);
+    get_calibration_params_ = false;
+  }
 
-  //   // Detect target center
-  //   double x1 = corners[k][0].x;
-  //   double y1 = corners[k][0].y;
+  // Convert msg to OpenCV image
+  cv::Mat new_frame(
+    msg->height,
+    msg->width,
+    CV_8UC3,
+    (void *)(msg->data.data()));
 
-  //   double x2 = corners[k][1].x;
-  //   double y2 = corners[k][1].y;
+  // Detect targets
+  std::vector<int> markerIds;
+  std::vector<std::vector<cv::Point2f>> markerCorners;
 
-  //   double x3 = corners[k][2].x;
-  //   double y3 = corners[k][2].y;
+  // TODO: add other dictionaries
+  cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+  cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
+  cv::aruco::ArucoDetector detector(dictionary, detectorParams);
+  detector.detectMarkers(new_frame, markerCorners, markerIds);
 
-  //   double x4 = corners[k][3].x;
-  //   double y4 = corners[k][3].y;
+  // Return if no target is detected
+  if (markerIds.size() == 0) return;
 
-  //   double xc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
-  //   double yc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
+  std::vector<cv::Vec3d> rvecs(markerIds.size()), tvecs(markerIds.size());
+  // Set coordinate system
+  cv::Mat objPoints(4, 1, CV_32FC3);
+  objPoints.ptr<cv::Vec3f>(0)[0] = cv::Vec3f(-aruco_side/2.f,  aruco_side/2.f, 0);
+  objPoints.ptr<cv::Vec3f>(0)[1] = cv::Vec3f( aruco_side/2.f,  aruco_side/2.f, 0);
+  objPoints.ptr<cv::Vec3f>(0)[2] = cv::Vec3f( aruco_side/2.f, -aruco_side/2.f, 0);
+  objPoints.ptr<cv::Vec3f>(0)[3] = cv::Vec3f(-aruco_side/2.f, -aruco_side/2.f, 0);
 
-  //   if ((abs(xc_den) < 1e-5) || (abs(yc_den) < 1e-5)) {
-  //     // Do not divide by zero! Just discard this sample
-  //     continue;
-  //   }
+  // Calculate pose for each marker
+  for (int i = 0; i < int(markerIds.size()); i++) {
+    solvePnP(objPoints, markerCorners.at(i), cameraMatrix, distCoeffs, rvecs.at(i), tvecs.at(i));
+  }
 
-  //   int xc =
-  //     (x3 * x4 * (y1 - y2) + x1 * x4 * (y2 - y3) + x1 * x2 * (y3 - y4) + x2 * x3 * (-y1 + y4)) /
-  //     xc_den;
-  //   int yc =
-  //     (x4 * y2 * (y1 - y3) + x1 * y2 * y3 - x2 * y1 * y4 - x1 * y3 * y4 + x2 * y3 * y4 + x3 * y1 *
-  //     (-y2 + y4)) / yc_den;
+  // Publish information about detected targets
+  aruco_centers_.clear();
+  TargetArray target_array_msg{};
 
-  //   // if (camera_id_ == Target::BOTTOM_CAMERA && ids[k] == 1) {
-  //   //   // If precise centering is required (e.g. for landing), apply camera offset
-  //   //   xc += sqrt((pow(x1 - x3, 2) + pow(y1 - y3, 2)) / 2) * camera_offset_ / aruco_side_;
-  //   // }
+  for (int k = 0; k < int(markerIds.size()); k++)
+  {
+    TargetID target_id{};
+    target_id.set__int_id(markerIds[k]);
+    // target_id.set__str_id();     // TODO
 
-  //   aruco_centers_.push_back(cv::Point(xc, yc));
+    Pose target_pose{};
+    target_pose.position.set__x(tvecs[k][0]);
+    target_pose.position.set__y(tvecs[k][1]);
+    target_pose.position.set__z(tvecs[k][2]);
+    rodrToQuat(rvecs[k], target_pose);
 
-  //   // Compute target position w.r.t. the world NED reference frame
-  //   if (compute_position_) {
-  //     double ex_pixels = xc - (new_frame.size().width / 2);
-  //     double ey_pixels = yc - (new_frame.size().height / 2);
+    std::cout << rvecs[k] << std::endl;
 
-  //     double err_x = -(altitude * ex_pixels) / focal_length_;
-  //     double err_y = -(altitude * ey_pixels) / focal_length_;
+    // Populate target message
+    Target target{};
+    target.set__header(msg->header);
+    target.set__target_id(target_id);
+    target.set__pose(target_pose);
 
-  //     // If error is too low, zero it to avoid numerical noise
-  //     if (sqrt(pow(err_x, 2) + pow(err_y, 2)) <= error_min_) {
-  //       err_x = 0.0;
-  //       err_y = 0.0;
-  //     }
+    target_array_msg.targets.push_back(target);
 
-  //     double cy = cos(yaw);
-  //     double sy = sin(yaw);
+    // Detect target center
+    double x1 = markerCorners[k][0].x;
+    double y1 = markerCorners[k][0].y;
 
-  //     double x_err = err_x * cy - err_y * sy;
-  //     double y_err = err_x * sy + err_y * cy;
+    double x2 = markerCorners[k][1].x;
+    double y2 = markerCorners[k][1].y;
 
-  //     // Round errors to centimeters to cut out numerical noise
-  //     x_err = round_space(x_err, 100.0f);
-  //     y_err = round_space(y_err, 100.0f);
+    double x3 = markerCorners[k][2].x;
+    double y3 = markerCorners[k][2].y;
 
-  //     float new_x = current_pose.x + x_err;
-  //     float new_y = current_pose.y + y_err;
+    double x4 = markerCorners[k][3].x;
+    double y4 = markerCorners[k][3].y;
 
-  //     // target_msg.set__position({new_x, new_y});
+    double xc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
+    double yc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
 
-  //   } else {
-  //     target_msg.set__position({NAN, NAN});
-  //   }
+    if ((abs(xc_den) < 1e-5) || (abs(yc_den) < 1e-5)) {
+      // Do not divide by zero! Just discard this sample
+      continue;
+    }
 
-  //   // target_pub_->publish(target_msg);
-  // }
+    int xc =
+      (x3 * x4 * (y1 - y2) + x1 * x4 * (y2 - y3) + x1 * x2 * (y3 - y4) + x2 * x3 * (-y1 + y4)) /
+      xc_den;
+    int yc =
+      (x4 * y2 * (y1 - y3) + x1 * y2 * y3 - x2 * y1 * y4 - x1 * y3 * y4 + x2 * y3 * y4 + x3 * y1 *
+      (-y2 + y4)) / yc_den;
 
-  // // Draw search output, ROI and HUD in another image
-  // cv::aruco::drawDetectedMarkers(new_frame, corners, ids);
-  // for (auto center : aruco_centers_) {
-  //   cv::drawMarker(
-  //     new_frame,
-  //     center,
-  //     cv::Scalar(0, 255, 0),
-  //     cv::MARKER_DIAMOND,
-  //     20,
-  //     3);
-  // }
-  // camera_frame_ = new_frame; // Doesn't copy image data, but sets data type...
-  // cv::Point line_left_top(
-  //   (camera_frame_.size().width / 2) - (centering_width_ / 2),
-  //   0);
-  // cv::Point line_right_top(
-  //   (camera_frame_.size().width / 2) + (centering_width_ / 2),
-  //   0);
-  // cv::Point line_left_bottom(
-  //   (camera_frame_.size().width / 2) - (centering_width_ / 2),
-  //   camera_frame_.size().height - 1);
-  // cv::Point line_right_bottom(
-  //   (camera_frame_.size().width / 2) + (centering_width_ / 2),
-  //   camera_frame_.size().height - 1);
-  // cv::Point rect_p1(
-  //   (camera_frame_.size().width / 2) - (centering_width_ / 2),
-  //   (camera_frame_.size().height / 2) - (centering_width_ / 2));
-  // cv::Point rect_p2(
-  //   (camera_frame_.size().width / 2) + (centering_width_ / 2),
-  //   (camera_frame_.size().height / 2) + (centering_width_ / 2));
-  // cv::Point crosshair_p(
-  //   camera_frame_.size().width / 2,
-  //   camera_frame_.size().height / 2);
-  // cv::line(
-  //   camera_frame_,
-  //   line_left_top,
-  //   line_left_bottom,
-  //   cv::Scalar(0, 255, 0),
-  //   5);
-  // cv::line(
-  //   camera_frame_,
-  //   line_right_top,
-  //   line_right_bottom,
-  //   cv::Scalar(0, 255, 0),
-  //   5);
-  // cv::rectangle(
-  //   camera_frame_,
-  //   rect_p1,
-  //   rect_p2,
-  //   cv::Scalar(0, 255, 0),
-  //   5);
-  // cv::drawMarker(
-  //   camera_frame_,
-  //   crosshair_p,
-  //   cv::Scalar(0, 255, 0),
-  //   cv::MARKER_CROSS,
-  //   15,
-  //   3);
+    aruco_centers_.push_back(cv::Point(xc, yc));
+  }
+  target_array_pub_->publish(target_array_msg);
 
-  // // Publish rate message and processed image
-  // Empty rate_msg{};
-  // camera_rate_pub_->publish(rate_msg);
-  // Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
-  // processed_image_msg->header.set__stamp(this->get_clock()->now());
-  // processed_image_msg->header.set__frame_id("map");
-  // target_img_pub_.publish(processed_image_msg);
+  // Draw search output, ROI and HUD in another image
+  cv::aruco::drawDetectedMarkers(new_frame, markerCorners, markerIds);
+  for (auto center : aruco_centers_) {
+    cv::drawMarker(
+      new_frame,
+      center,
+      cv::Scalar(0, 255, 0),
+      cv::MARKER_DIAMOND,
+      20,
+      3);
+  }
+
+  // Draw axis for each marker
+  for(unsigned int i = 0; i < markerIds.size(); i++) {
+    cv::drawFrameAxes(new_frame, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
+  }
+
+  camera_frame_ = new_frame; // Doesn't copy image data, but sets data type...
+
+  cv::Point rect_p1(
+    (camera_frame_.size().width / 2) - (centering_width / 2),
+    (camera_frame_.size().height / 2) - (centering_width / 2));
+  cv::Point rect_p2(
+    (camera_frame_.size().width / 2) + (centering_width / 2),
+    (camera_frame_.size().height / 2) + (centering_width / 2));
+
+  cv::Point crosshair_p(
+    camera_frame_.size().width / 2,
+    camera_frame_.size().height / 2);
+
+  cv::rectangle(
+    camera_frame_,
+    rect_p1,
+    rect_p2,
+    cv::Scalar(0, 255, 0),
+    5);
+  cv::drawMarker(
+    camera_frame_,
+    crosshair_p,
+    cv::Scalar(0, 255, 0),
+    cv::MARKER_CROSS,
+    15,
+    3);
+
+  // Publish rate message and processed image
+  Empty rate_msg{};
+  camera_rate_pub_->publish(rate_msg);
+
+  Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
+  processed_image_msg->set__header(msg->header);
+  stream_pub_->publish(processed_image_msg);
 }
 
 /**

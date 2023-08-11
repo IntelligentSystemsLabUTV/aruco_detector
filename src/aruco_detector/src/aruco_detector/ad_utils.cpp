@@ -91,4 +91,35 @@ float ArucoDetectorNode::round_angle(float num, float prec)
   return num * M_PIf32 / 180.0;
 }
 
+/**
+ * @brief Function to convert Rodrigues' vector to quaternion.
+ *
+ * @param r Vector in Rodrigues' form (axis-angle).
+ * @param target_pose pose msg to fill
+ */
+void ArucoDetectorNode::rodrToQuat(cv::Vec3d r, Pose & target_pose) {
+    double w, x, y, z;
+    double angle = cv::norm(r);
+
+    if (angle < 1e-8) {
+        w = 1.0;
+        x = y = z = 0.0;
+    }
+    else
+    {
+      double c = std::cos(angle / 2.0);
+      double s = std::sin(angle / 2.0);
+
+      w = c;
+      x = s * r[0] / angle;
+      y = s * r[1] / angle;
+      z = s * r[2] / angle;
+    }
+
+    target_pose.orientation.set__w(w);
+    target_pose.orientation.set__x(x);
+    target_pose.orientation.set__y(y);
+    target_pose.orientation.set__z(z);
+}
+
 } // namespace ArucoDetector

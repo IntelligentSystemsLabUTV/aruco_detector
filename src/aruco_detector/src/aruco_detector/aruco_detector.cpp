@@ -99,7 +99,8 @@ void ArucoDetectorNode::init_subscriptions()
       std::bind(
         &ArucoDetectorNode::camera_callback,
         this,
-        std::placeholders::_1),
+        std::placeholders::_1,
+        std::placeholders::_2),
       transport,
       best_effort_sub_qos ?
         DUAQoS::Visualization::get_image_qos(image_sub_depth).get_rmw_qos_profile() :
@@ -129,16 +130,10 @@ void ArucoDetectorNode::init_publishers()
     "~/camera_rate",
     DUAQoS::get_datum_qos());
 
-  // Target data
-  // target_pub_ = this->create_publisher<Target>(
-  //   "/targets",
-  //   rmw_qos_profile_sensor_data);
-
-  // Target images
-  target_img_pub_ = image_transport::create_publisher(
-    this,
-    "~/targets/image_rect_color",
-    rmw_qos_profile_sensor_data); // FIXME: use DUAQoS::get_datum_qos() instead
+  // Targets data
+  target_array_pub_ = this->create_publisher<TargetArray>(
+    "~/targets",
+    DUAQoS::get_datum_qos());
 
   // Theora publisher
   stream_pub_ = std::make_shared<TheoraWrappers::Publisher>(

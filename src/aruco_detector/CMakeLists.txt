@@ -22,8 +22,10 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(dua_app_management REQUIRED)
+find_package(dua_interfaces REQUIRED)
 find_package(dua_node REQUIRED)
 find_package(dua_qos REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(OpenCV 4.5.5 REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -64,8 +66,10 @@ target_link_libraries(aruco_detector
   Threads::Threads)
 ament_target_dependencies(aruco_detector
   "dua_app_management"
+  "dua_interfaces"
   "dua_node"
   "dua_qos"
+  "geometry_msgs"
   "image_transport"
   "params_manager"
   "rclcpp_components"

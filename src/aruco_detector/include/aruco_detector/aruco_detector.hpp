@@ -33,10 +33,14 @@
 
 #include <dua_node/dua_node.hpp>
 #include <dua_qos/dua_qos.hpp>
+#include <dua_interfaces/msg/target.hpp>
+#include <dua_interfaces/msg/target_array.hpp>
+#include <dua_interfaces/msg/target_id.hpp>
 
 #include <opencv2/aruco.hpp>
 // #include <opencv2/aruco/dictionary.hpp>
 #include <opencv2/core.hpp>
+#include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include <rclcpp/rclcpp.hpp>
@@ -44,6 +48,8 @@
 #include <image_transport/image_transport.hpp>
 #include <image_transport/subscriber.hpp>
 
+#include <geometry_msgs/msg/pose.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <std_msgs/msg/empty.hpp>
@@ -54,6 +60,8 @@
 // #include <stanis_interfaces/msg/pose.hpp>
 // #include <stanis_interfaces/msg/target.hpp>
 
+using namespace dua_interfaces::msg;
+using namespace geometry_msgs::msg;
 using namespace rcl_interfaces::msg;
 using namespace sensor_msgs::msg;
 using namespace std_msgs::msg;
@@ -89,12 +97,13 @@ private:
   image_transport::CameraSubscriber camera_sub_;
 
   /* Topic subscriptions callbacks */
-  void camera_callback(const Image::ConstSharedPtr & msg);
+  void camera_callback(const Image::ConstSharedPtr & msg,
+                       const CameraInfo::ConstSharedPtr & camera_info_msg);
   // void pose_callback(const Pose::SharedPtr msg);
 
   /* Topic publishers */
   rclcpp::Publisher<Empty>::SharedPtr camera_rate_pub_;
-  // rclcpp::Publisher<Target>::SharedPtr target_pub_;
+  rclcpp::Publisher<TargetArray>::SharedPtr target_array_pub_;
 
   /* image_transport publishers */
   image_transport::Publisher target_img_pub_;
@@ -120,6 +129,9 @@ private:
   /* Internal state variables */
   uint8_t camera_id_ = 0;
   bool is_on_ = false;
+  bool get_calibration_params_ = true;
+  cv::Mat cameraMatrix;
+  cv::Mat distCoeffs;
 
   /* Node parameters */
   double aruco_side = 0.0;
@@ -141,11 +153,13 @@ private:
 
   /* Synchronization primitives for internal update operations */
   std::mutex pose_lock_;
+  std::mutex camera_info_lock_;
 
   /* Utility routines */
   Image::SharedPtr frame_to_msg(cv::Mat & frame);
   float round_angle(float num, float prec);
   float round_space(float num, float prec);
+  void rodrToQuat(cv::Vec3d r, Pose & target_pose);
 };
 
 } // namespace ArucoDetector

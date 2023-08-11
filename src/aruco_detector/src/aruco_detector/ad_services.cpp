@@ -47,7 +47,8 @@ void ArucoDetectorNode::enable_callback(
         std::bind(
           &ArucoDetectorNode::camera_callback,
           this,
-          std::placeholders::_1),
+          std::placeholders::_1,
+          std::placeholders::_2),
         transport,
         best_effort_sub_qos ?
           DUAQoS::Visualization::get_image_qos(image_sub_depth).get_rmw_qos_profile() :
