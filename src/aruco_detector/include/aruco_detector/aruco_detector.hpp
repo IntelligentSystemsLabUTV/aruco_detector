@@ -1,8 +1,8 @@
 /**
  * Aruco Detector node definition.
  *
- * Roberto Masocco <robmasocco@gmail.com>
  * Lorenzo Bianchi <lnz.bnc@gmail.com>
+ * Roberto Masocco <robmasocco@gmail.com>
  * Intelligent Systems Lab <isl.torvergata@gmail.com>
  *
  * August 7, 2023
@@ -27,8 +27,6 @@
 #ifndef ARUCO_DETECTOR_HPP
 #define ARUCO_DETECTOR_HPP
 
-#include <memory>
-#include <pthread.h>
 #include <vector>
 
 #include <dua_node/dua_node.hpp>
@@ -38,7 +36,6 @@
 #include <dua_interfaces/msg/target_id.hpp>
 
 #include <opencv2/aruco.hpp>
-// #include <opencv2/aruco/dictionary.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
@@ -56,9 +53,6 @@
 #include <std_srvs/srv/set_bool.hpp>
 
 #include <theora_wrappers/publisher.hpp>
-
-// #include <stanis_interfaces/msg/pose.hpp>
-// #include <stanis_interfaces/msg/target.hpp>
 
 using namespace dua_interfaces::msg;
 using namespace geometry_msgs::msg;
@@ -90,16 +84,12 @@ private:
   /* Topic subscriptions callback groups */
   rclcpp::CallbackGroup::SharedPtr pose_cgroup_;
 
-  /* Topic subscriptions */
-  // rclcpp::Subscription<Pose>::SharedPtr pose_sub_;
-
   /* image_transport subscriptions */
   image_transport::CameraSubscriber camera_sub_;
 
   /* Topic subscriptions callbacks */
   void camera_callback(const Image::ConstSharedPtr & msg,
                        const CameraInfo::ConstSharedPtr & camera_info_msg);
-  // void pose_callback(const Pose::SharedPtr msg);
 
   /* Topic publishers */
   rclcpp::Publisher<Empty>::SharedPtr camera_rate_pub_;
@@ -127,7 +117,6 @@ private:
   std::vector<cv::Point> aruco_centers_;
 
   /* Internal state variables */
-  uint8_t camera_id_ = 0;
   bool is_on_ = false;
   bool get_calibration_params_ = true;
   cv::Mat cameraMatrix;
@@ -136,17 +125,10 @@ private:
   /* Node parameters */
   double aruco_side = 0.0;
   bool autostart = false;
-  std::string base_frame = "";
   bool best_effort_sub_qos = false;
-  double camera_offset = 0.0;
-  std::string camera_topic = "";
   int64_t centering_width = 0;
-  bool compute_position = false;
-  double error_min = 0.0;
-  int64_t focal_length = 0;
   int64_t image_sub_depth = 0;
   std::string input_topic = "";
-  std::string node_namespace = "";
   std::string output_topic = "";
   std::string stream_topic = "";
   std::string transport = "";

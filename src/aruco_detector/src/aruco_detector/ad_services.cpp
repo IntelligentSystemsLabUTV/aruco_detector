@@ -1,8 +1,8 @@
 /**
  * Aruco Detector node service callbacks.
  *
- * Roberto Masocco <robmasocco@gmail.com>
  * Lorenzo Bianchi <lnz.bnc@gmail.com>
+ * Roberto Masocco <robmasocco@gmail.com>
  * Intelligent Systems Lab <isl.torvergata@gmail.com>
  *
  * August 7, 2023

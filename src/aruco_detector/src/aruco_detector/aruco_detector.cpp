@@ -1,8 +1,8 @@
 /**
  * Aruco Detector node implementation.
  *
- * Roberto Masocco <robmasocco@gmail.com>
  * Lorenzo Bianchi <lnz.bnc@gmail.com>
+ * Roberto Masocco <robmasocco@gmail.com>
  * Intelligent Systems Lab <isl.torvergata@gmail.com>
  *
  * August 7, 2023
@@ -106,18 +106,6 @@ void ArucoDetectorNode::init_subscriptions()
         DUAQoS::Visualization::get_image_qos(image_sub_depth).get_rmw_qos_profile() :
         DUAQoS::get_image_qos(image_sub_depth).get_rmw_qos_profile());
   }
-
-  // Drone pose
-  // auto pose_sub_opts = rclcpp::SubscriptionOptions();
-  // pose_sub_opts.callback_group = pose_cgroup_;
-  // pose_sub_ = this->create_subscription<Pose>(
-  //   "/flight_control/pose",
-  //   rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(FlightControl::fc_pose_qos_profile)),
-  //   std::bind(
-  //     &ArucoDetectorNode::pose_callback,
-  //     this,
-  //     std::placeholders::_1),
-  //   pose_sub_opts);
 }
 
 /**

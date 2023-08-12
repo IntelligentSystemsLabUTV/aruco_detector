@@ -5,11 +5,8 @@
     base_frame: seppia/base_footprint
     best_effort_sub_qos: true
     centering_width: 150
-    compute_position: true
-    error_min: 0.1
     image_sub_depth: 3
     input_topic: /usb_camera/usb_camera_driver/camera/image_rect_color
-    node_namespace: /seppia
     output_topic: /aruco_output
     stream_topic: /gui_1
     transport: compressed

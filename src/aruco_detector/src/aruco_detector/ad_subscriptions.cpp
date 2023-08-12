@@ -1,8 +1,8 @@
 /**
  * Aruco Detector node topic subscription callbacks.
  *
- * Roberto Masocco <robmasocco@gmail.com>
  * Lorenzo Bianchi <lnz.bnc@gmail.com>
+ * Roberto Masocco <robmasocco@gmail.com>
  * Intelligent Systems Lab <isl.torvergata@gmail.com>
  *
  * August 7, 2023
@@ -37,13 +37,6 @@ namespace ArucoDetector
 void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
                                         const CameraInfo::ConstSharedPtr & camera_info_msg)
 {
-  // // Get current drone pose
-  // pose_lock_.lock();
-  // // DronePose current_pose = pose_;
-  // pose_lock_.unlock();
-  // double altitude = current_pose.z;
-  // double yaw = current_pose.yaw;
-
   // Get camera parameters
   if (get_calibration_params_)
   {
@@ -101,7 +94,7 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
   {
     TargetID target_id{};
     target_id.set__int_id(markerIds[k]);
-    // target_id.set__str_id();     // TODO
+    target_id.set__str_id(msg->header.frame_id);
 
     Pose target_pose{};
     target_pose.position.set__x(tvecs[k][0]);
@@ -203,24 +196,5 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
   processed_image_msg->set__header(msg->header);
   stream_pub_->publish(processed_image_msg);
 }
-
-/**
- * @brief Stores the latest drone pose.
- *
- * @param msg Pose message to parse.
- */
-// void ArucoDetectorNode::pose_callback(const Pose::SharedPtr msg)
-// {
-//   DronePose new_pose(
-//     msg->x,
-//     msg->y,
-//     msg->z,
-//     msg->roll,
-//     msg->pitch,
-//     msg->yaw);
-//   pthread_spin_lock(&(this->pose_lock_));
-//   pose_ = new_pose;
-//   pthread_spin_unlock(&(this->pose_lock_));
-// }
 
 } // namespace ArucoDetector
