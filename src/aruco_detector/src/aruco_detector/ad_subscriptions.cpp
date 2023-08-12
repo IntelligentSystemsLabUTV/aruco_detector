@@ -50,6 +50,13 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     for (size_t i = 0; i < 5; i++)
       distCoeffs.at<double>(0, i) = camera_info_msg->d[i];
 
+    // Set coordinate system
+    objPoints = cv::Mat(4, 1, CV_32FC3);
+    objPoints.ptr<cv::Vec3f>(0)[0] = cv::Vec3f(-aruco_side/2.f,  aruco_side/2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[1] = cv::Vec3f( aruco_side/2.f,  aruco_side/2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[2] = cv::Vec3f( aruco_side/2.f, -aruco_side/2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[3] = cv::Vec3f(-aruco_side/2.f, -aruco_side/2.f, 0);
+
     get_calibration_params_ = false;
   }
 
@@ -63,28 +70,27 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
   // Detect targets
   std::vector<int> markerIds;
   std::vector<std::vector<cv::Point2f>> markerCorners;
-
   // TODO: add other dictionaries
   cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
   cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
   cv::aruco::ArucoDetector detector(dictionary, detectorParams);
   detector.detectMarkers(new_frame, markerCorners, markerIds);
 
+  // Remove markers with IDs in the exclusion list
+  for (int64_t id : excluded_ids)
+  {
+    auto iterId = std::remove(markerIds.begin(), markerIds.end(), id);
+    auto iterCorn = markerCorners.begin() + std::distance(markerIds.begin(), iterId);
+
+    // Rimuovi il valore da A e il corrispondente da B
+    markerIds.erase(iterId, markerIds.end());
+    markerCorners.erase(iterCorn, markerCorners.end());
+  }
+
   // Return if no target is detected
   if (markerIds.size() == 0) return;
 
   std::vector<cv::Vec3d> rvecs(markerIds.size()), tvecs(markerIds.size());
-  // Set coordinate system
-  cv::Mat objPoints(4, 1, CV_32FC3);
-  objPoints.ptr<cv::Vec3f>(0)[0] = cv::Vec3f(-aruco_side/2.f,  aruco_side/2.f, 0);
-  objPoints.ptr<cv::Vec3f>(0)[1] = cv::Vec3f( aruco_side/2.f,  aruco_side/2.f, 0);
-  objPoints.ptr<cv::Vec3f>(0)[2] = cv::Vec3f( aruco_side/2.f, -aruco_side/2.f, 0);
-  objPoints.ptr<cv::Vec3f>(0)[3] = cv::Vec3f(-aruco_side/2.f, -aruco_side/2.f, 0);
-
-  // Calculate pose for each marker
-  for (int i = 0; i < int(markerIds.size()); i++) {
-    solvePnP(objPoints, markerCorners.at(i), cameraMatrix, distCoeffs, rvecs.at(i), tvecs.at(i));
-  }
 
   // Publish information about detected targets
   aruco_centers_.clear();
@@ -92,6 +98,10 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
 
   for (int k = 0; k < int(markerIds.size()); k++)
   {
+    // Calculate pose for each marker
+    solvePnP(objPoints, markerCorners.at(k), cameraMatrix, distCoeffs, rvecs.at(k), tvecs.at(k));
+
+    // Populate TargetID
     TargetID target_id{};
     target_id.set__int_id(markerIds[k]);
     target_id.set__str_id(msg->header.frame_id);
@@ -102,9 +112,7 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     target_pose.position.set__z(tvecs[k][2]);
     rodrToQuat(rvecs[k], target_pose);
 
-    std::cout << rvecs[k] << std::endl;
-
-    // Populate target message
+    // Populate Target message
     Target target{};
     target.set__header(msg->header);
     target.set__target_id(target_id);
@@ -128,7 +136,8 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     double xc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
     double yc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
 
-    if ((abs(xc_den) < 1e-5) || (abs(yc_den) < 1e-5)) {
+    if ((abs(xc_den) < 1e-5) || (abs(yc_den) < 1e-5))
+    {
       // Do not divide by zero! Just discard this sample
       continue;
     }
@@ -146,20 +155,10 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
 
   // Draw search output, ROI and HUD in another image
   cv::aruco::drawDetectedMarkers(new_frame, markerCorners, markerIds);
-  for (auto center : aruco_centers_) {
-    cv::drawMarker(
-      new_frame,
-      center,
-      cv::Scalar(0, 255, 0),
-      cv::MARKER_DIAMOND,
-      20,
-      3);
-  }
 
   // Draw axis for each marker
-  for(unsigned int i = 0; i < markerIds.size(); i++) {
+  for(int i = 0; i < int(markerIds.size()); i++)
     cv::drawFrameAxes(new_frame, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
-  }
 
   camera_frame_ = new_frame; // Doesn't copy image data, but sets data type...
 

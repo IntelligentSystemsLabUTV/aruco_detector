@@ -5,6 +5,9 @@
     base_frame: seppia/base_footprint
     best_effort_sub_qos: true
     centering_width: 150
+    excluded_ids:
+      - 0
+      - 1023
     image_sub_depth: 3
     input_topic: /usb_camera/usb_camera_driver/camera/image_rect_color
     output_topic: /aruco_output

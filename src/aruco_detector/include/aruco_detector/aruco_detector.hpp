@@ -27,6 +27,8 @@
 #ifndef ARUCO_DETECTOR_HPP
 #define ARUCO_DETECTOR_HPP
 
+#include <algorithm>
+#include <iterator>
 #include <vector>
 
 #include <dua_node/dua_node.hpp>
@@ -119,14 +121,14 @@ private:
   /* Internal state variables */
   bool is_on_ = false;
   bool get_calibration_params_ = true;
-  cv::Mat cameraMatrix;
-  cv::Mat distCoeffs;
+  cv::Mat cameraMatrix, distCoeffs, objPoints;
 
   /* Node parameters */
   double aruco_side = 0.0;
   bool autostart = false;
   bool best_effort_sub_qos = false;
   int64_t centering_width = 0;
+  std::vector<int64_t> excluded_ids;
   int64_t image_sub_depth = 0;
   std::string input_topic = "";
   std::string output_topic = "";
