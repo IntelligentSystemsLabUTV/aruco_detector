@@ -1,6 +1,6 @@
 /seppia/aruco_detector:
   ros__parameters:
-    aruco_side: 0.15
+    aruco_side: 0.154
     autostart: true
     base_frame: seppia/base_footprint
     best_effort_sub_qos: true
