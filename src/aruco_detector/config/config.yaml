@@ -10,6 +10,6 @@
       - 1023
     image_sub_depth: 3
     input_topic: /usb_camera/usb_camera_driver/camera/image_rect_color
-    output_topic: /aruco_output
+    output_topic: /seppia/aruco_detector/targets
     stream_topic: /gui_1
     transport: compressed

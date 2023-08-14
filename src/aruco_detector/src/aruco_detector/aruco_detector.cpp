@@ -120,7 +120,7 @@ void ArucoDetectorNode::init_publishers()
 
   // Targets data
   target_array_pub_ = this->create_publisher<TargetArray>(
-    "~/targets",
+    output_topic,
     DUAQoS::get_datum_qos());
 
   // Theora publisher
