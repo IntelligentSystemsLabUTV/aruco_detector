@@ -70,9 +70,14 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
   // Detect targets
   std::vector<int> markerIds;
   std::vector<std::vector<cv::Point2f>> markerCorners;
+
   // TODO: add other dictionaries
   cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+
+  // Set detector parameters
   cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
+  detectorParams.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+
   cv::aruco::ArucoDetector detector(dictionary, detectorParams);
   detector.detectMarkers(new_frame, markerCorners, markerIds);
 
