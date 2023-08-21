@@ -87,7 +87,7 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     auto iterId = std::remove(markerIds.begin(), markerIds.end(), id);
     auto iterCorn = markerCorners.begin() + std::distance(markerIds.begin(), iterId);
 
-    // Rimuovi il valore da A e il corrispondente da B
+    // Remove elements from both arrays
     markerIds.erase(iterId, markerIds.end());
     markerCorners.erase(iterCorn, markerCorners.end());
   }
@@ -103,9 +103,13 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
 
   for (int k = 0; k < int(markerIds.size()); k++)
   {
-    // Calculate pose for each marker
-    solvePnP(objPoints, markerCorners.at(k), cameraMatrix, distCoeffs, rvecs.at(k), tvecs.at(k));
+    // Compute Aruco center
+    square_center_2d(markerCorners[k], aruco_centers_);
 
+    // Calculate pose for each marker
+    solvePnP(objPoints, markerCorners[k], cameraMatrix, distCoeffs, rvecs[k], tvecs[k]);
+
+    // Prepare messages to be published
     // Populate TargetID
     TargetID target_id{};
     target_id.set__int_id(markerIds[k]);
@@ -124,37 +128,6 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     target.set__pose(target_pose);
 
     target_array_msg.targets.push_back(target);
-
-    // Detect target center
-    double x1 = markerCorners[k][0].x;
-    double y1 = markerCorners[k][0].y;
-
-    double x2 = markerCorners[k][1].x;
-    double y2 = markerCorners[k][1].y;
-
-    double x3 = markerCorners[k][2].x;
-    double y3 = markerCorners[k][2].y;
-
-    double x4 = markerCorners[k][3].x;
-    double y4 = markerCorners[k][3].y;
-
-    double xc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
-    double yc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
-
-    if ((abs(xc_den) < 1e-5) || (abs(yc_den) < 1e-5))
-    {
-      // Do not divide by zero! Just discard this sample
-      continue;
-    }
-
-    int xc =
-      (x3 * x4 * (y1 - y2) + x1 * x4 * (y2 - y3) + x1 * x2 * (y3 - y4) + x2 * x3 * (-y1 + y4)) /
-      xc_den;
-    int yc =
-      (x4 * y2 * (y1 - y3) + x1 * y2 * y3 - x2 * y1 * y4 - x1 * y3 * y4 + x2 * y3 * y4 + x3 * y1 *
-      (-y2 + y4)) / yc_den;
-
-    aruco_centers_.push_back(cv::Point(xc, yc));
   }
   target_array_pub_->publish(target_array_msg);
 
@@ -167,30 +140,30 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
 
   camera_frame_ = new_frame; // Doesn't copy image data, but sets data type...
 
-  cv::Point rect_p1(
-    (camera_frame_.size().width / 2) - (centering_width / 2),
-    (camera_frame_.size().height / 2) - (centering_width / 2));
-  cv::Point rect_p2(
-    (camera_frame_.size().width / 2) + (centering_width / 2),
-    (camera_frame_.size().height / 2) + (centering_width / 2));
+  // cv::Point rect_p1(
+  //   (camera_frame_.size().width / 2) - (centering_width / 2),
+  //   (camera_frame_.size().height / 2) - (centering_width / 2));
+  // cv::Point rect_p2(
+  //   (camera_frame_.size().width / 2) + (centering_width / 2),
+  //   (camera_frame_.size().height / 2) + (centering_width / 2));
 
-  cv::Point crosshair_p(
-    camera_frame_.size().width / 2,
-    camera_frame_.size().height / 2);
+  // cv::Point crosshair_p(
+  //   camera_frame_.size().width / 2,
+  //   camera_frame_.size().height / 2);
 
-  cv::rectangle(
-    camera_frame_,
-    rect_p1,
-    rect_p2,
-    cv::Scalar(0, 255, 0),
-    5);
-  cv::drawMarker(
-    camera_frame_,
-    crosshair_p,
-    cv::Scalar(0, 255, 0),
-    cv::MARKER_CROSS,
-    15,
-    3);
+  // cv::rectangle(
+  //   camera_frame_,
+  //   rect_p1,
+  //   rect_p2,
+  //   cv::Scalar(0, 255, 0),
+  //   5);
+  // cv::drawMarker(
+  //   camera_frame_,
+  //   crosshair_p,
+  //   cv::Scalar(0, 255, 0),
+  //   cv::MARKER_CROSS,
+  //   15,
+  //   3);
 
   // Publish rate message and processed image
   Empty rate_msg{};

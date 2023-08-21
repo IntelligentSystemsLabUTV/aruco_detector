@@ -144,6 +144,7 @@ private:
   float round_angle(float num, float prec);
   float round_space(float num, float prec);
   void rodrToQuat(cv::Vec3d r, Pose & target_pose);
+  void square_center_2d(std::vector<cv::Point2f> corners, std::vector<cv::Point>& aruco_centers);
 };
 
 } // namespace ArucoDetector

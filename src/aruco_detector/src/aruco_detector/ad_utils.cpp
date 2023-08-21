@@ -97,7 +97,8 @@ float ArucoDetectorNode::round_angle(float num, float prec)
  * @param r Vector in Rodrigues' form (axis-angle).
  * @param target_pose pose msg to fill
  */
-void ArucoDetectorNode::rodrToQuat(cv::Vec3d r, Pose & target_pose) {
+void ArucoDetectorNode::rodrToQuat(cv::Vec3d r, Pose & target_pose)
+{
     double w, x, y, z;
     double angle = cv::norm(r);
 
@@ -120,6 +121,46 @@ void ArucoDetectorNode::rodrToQuat(cv::Vec3d r, Pose & target_pose) {
     target_pose.orientation.set__x(x);
     target_pose.orientation.set__y(y);
     target_pose.orientation.set__z(z);
+}
+
+/**
+ * @brief Function to compute 2D and 3D square center.
+ *
+ * @param corners Vector with the four square vertices coordinates.
+ * @param aruco_centers Vector to append new center point to.
+ */
+void ArucoDetectorNode::square_center_2d(std::vector<cv::Point2f> corners,
+                                         std::vector<cv::Point>& aruco_centers)
+{
+  double x1 = corners[0].x;
+  double y1 = corners[0].y;
+
+  double x2 = corners[1].x;
+  double y2 = corners[1].y;
+
+  double x3 = corners[2].x;
+  double y3 = corners[2].y;
+
+  double x4 = corners[3].x;
+  double y4 = corners[3].y;
+
+  double xc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
+  double yc_den = (-((x2 - x4) * (y1 - y3)) + (x1 - x3) * (y2 - y4));
+
+  if ((abs(xc_den) < 1e-5) || (abs(yc_den) < 1e-5))
+  {
+    // Do not divide by zero! Just discard this sample
+    return;
+  }
+
+  int xc =
+    (x3 * x4 * (y1 - y2) + x1 * x4 * (y2 - y3) + x1 * x2 * (y3 - y4) + x2 * x3 * (-y1 + y4)) /
+    xc_den;
+  int yc =
+    (x4 * y2 * (y1 - y3) + x1 * y2 * y3 - x2 * y1 * y4 - x1 * y3 * y4 + x2 * y3 * y4 + x3 * y1 *
+    (-y2 + y4)) / yc_den;
+
+  aruco_centers.push_back(cv::Point(xc, yc));
 }
 
 } // namespace ArucoDetector
