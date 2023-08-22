@@ -9,7 +9,7 @@
       - 0
       - 1023
     image_sub_depth: 3
-    input_topic: /seppia/usbcam_right/image_raw
+    input_topic: /seppia/usbcam_left/image_raw
     output_topic: /seppia/aruco_detector/targets
     stream_topic: /gui_3
     transport: compressed
