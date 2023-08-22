@@ -1,0 +1,15 @@
+/seppia/aruco_detector:
+  ros__parameters:
+    aruco_side: 0.15
+    autostart: true
+    base_frame: seppia/base_footprint
+    best_effort_sub_qos: true
+    centering_width: 150
+    excluded_ids:
+      - 0
+      - 1023
+    image_sub_depth: 3
+    input_topic: /seppia/usbcam_right/image_raw
+    output_topic: /seppia/aruco_detector/targets
+    stream_topic: /gui_3
+    transport: compressed

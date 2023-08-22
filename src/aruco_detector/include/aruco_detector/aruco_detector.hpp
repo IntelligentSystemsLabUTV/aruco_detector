@@ -136,7 +136,6 @@ private:
   std::string transport = "";
 
   /* Synchronization primitives for internal update operations */
-  std::mutex pose_lock_;
   std::mutex camera_info_lock_;
 
   /* Utility routines */
