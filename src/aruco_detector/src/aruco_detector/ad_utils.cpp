@@ -163,4 +163,158 @@ void ArucoDetectorNode::square_center_2d(std::vector<cv::Point2f> corners,
   aruco_centers.push_back(cv::Point(xc, yc));
 }
 
+/**
+ * @brief Thread routine.
+ */
+void ArucoDetectorNode::worker_thread_routine()
+{
+  std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+  while (true)
+  {
+    cv::Mat image_{};
+    std_msgs::msg::Header header_;
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+    sem_wait(&sem2_);
+    if (!running_.load(std::memory_order_acquire))
+      break;
+    new_frame_.copyTo(image_);
+    header_ = last_header_;
+    sem_post(&sem1_);
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    // Detect targets
+    std::vector<int> markerIds;
+    std::vector<std::vector<cv::Point2f>> markerCorners;
+
+    // TODO: add other dictionaries
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    // Set detector parameters
+    cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
+    detectorParams.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+    cv::aruco::ArucoDetector detector(dictionary, detectorParams);
+std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+std::cout << "\t\t\t\t"  << image_.size() << std::endl;
+    try {
+      detector.detectMarkers(image_, markerCorners, markerIds);
+    } catch (cv::Exception & e) {
+      std::cout << "\t\t\t\t" << e.what() << std::endl;
+      continue;
+    }
+std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+    // Remove markers with IDs in the exclusion list
+    for (int64_t id : excluded_ids)
+    {
+      auto iterId = std::remove(markerIds.begin(), markerIds.end(), id);
+      auto iterCorn = markerCorners.begin() + std::distance(markerIds.begin(), iterId);
+std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+      // Remove elements from both arrays
+      markerIds.erase(iterId, markerIds.end());
+      markerCorners.erase(iterCorn, markerCorners.end());
+      std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+    }
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    // Return if no target is detected
+    if (markerIds.size() == 0) continue;
+
+    std::vector<cv::Vec3d> rvecs(markerIds.size()), tvecs(markerIds.size());
+
+    // Publish information about detected targets
+    aruco_centers_.clear();
+    TargetArray target_array_msg{};
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    for (int k = 0; k < int(markerIds.size()); k++)
+    {
+      // Compute Aruco center
+      square_center_2d(markerCorners[k], aruco_centers_);
+
+      // Calculate pose for each marker
+      solvePnP(objPoints, markerCorners[k], cameraMatrix, distCoeffs, rvecs[k], tvecs[k]);
+
+      // Prepare messages to be published
+      // Populate TargetID
+      TargetID target_id{};
+      target_id.set__int_id(markerIds[k]);
+      target_id.set__str_id(header_.frame_id);
+
+      Pose target_pose{};
+      target_pose.position.set__x(tvecs[k][0]);
+      target_pose.position.set__y(tvecs[k][1]);
+      target_pose.position.set__z(tvecs[k][2]);
+      rodrToQuat(rvecs[k], target_pose);
+
+      // Populate Target message
+      Target target{};
+      target.set__header(header_);
+      target.set__target_id(target_id);
+      target.set__pose(target_pose);
+
+      target_array_msg.targets.push_back(target);
+    }
+    target_array_pub_->publish(target_array_msg);
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    // Draw search output, ROI and HUD in another image
+    cv::aruco::drawDetectedMarkers(image_, markerCorners, markerIds);
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    // Draw axis for each marker
+    for(int i = 0; i < int(markerIds.size()); i++)
+      cv::drawFrameAxes(image_, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    camera_frame_ = image_; // Doesn't copy image data, but sets data type...
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    // cv::Point rect_p1(
+    //   (camera_frame_.size().width / 2) - (centering_width / 2),
+    //   (camera_frame_.size().height / 2) - (centering_width / 2));
+    // cv::Point rect_p2(
+    //   (camera_frame_.size().width / 2) + (centering_width / 2),
+    //   (camera_frame_.size().height / 2) + (centering_width / 2));
+
+    // cv::Point crosshair_p(
+    //   camera_frame_.size().width / 2,
+    //   camera_frame_.size().height / 2);
+
+    // cv::rectangle(
+    //   camera_frame_,
+    //   rect_p1,
+    //   rect_p2,
+    //   cv::Scalar(0, 255, 0),
+    //   5);
+    // cv::drawMarker(
+    //   camera_frame_,
+    //   crosshair_p,
+    //   cv::Scalar(0, 255, 0),
+    //   cv::MARKER_CROSS,
+    //   15,
+    //   3);
+
+    // Publish rate message and processed image
+    Empty rate_msg{};
+    camera_rate_pub_->publish(rate_msg);
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
+    Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
+    processed_image_msg->set__header(header_);
+    stream_pub_->publish(processed_image_msg);
+
+    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+  }
+}
+
+
 } // namespace ArucoDetector

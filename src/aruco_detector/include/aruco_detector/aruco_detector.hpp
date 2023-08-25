@@ -27,9 +27,15 @@
 #ifndef ARUCO_DETECTOR_HPP
 #define ARUCO_DETECTOR_HPP
 
+
+#include <atomic>
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
+#include <thread>
 #include <vector>
+
+#include <semaphore.h>
 
 #include <dua_node/dua_node.hpp>
 #include <dua_qos/dua_qos.hpp>
@@ -77,6 +83,7 @@ public:
 
 private:
   /* Node initialization routines */
+  void init_atomics();
   void init_cgroups();
   void init_parameters();
   void init_publishers();
@@ -87,7 +94,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr pose_cgroup_;
 
   /* image_transport subscriptions */
-  image_transport::CameraSubscriber camera_sub_;
+  std::shared_ptr<image_transport::CameraSubscriber> camera_sub_;
 
   /* Topic subscriptions callbacks */
   void camera_callback(const Image::ConstSharedPtr & msg,
@@ -98,7 +105,7 @@ private:
   rclcpp::Publisher<TargetArray>::SharedPtr target_array_pub_;
 
   /* image_transport publishers */
-  image_transport::Publisher target_img_pub_;
+  std::shared_ptr<image_transport::Publisher> target_img_pub_;
 
   /* Theora stream publishers. */
   std::shared_ptr<TheoraWrappers::Publisher> stream_pub_;
@@ -115,10 +122,11 @@ private:
     SetBool::Response::SharedPtr resp);
 
   /* Data buffers */
-  cv::Mat camera_frame_;
-  std::vector<cv::Point> aruco_centers_;
+  cv::Mat camera_frame_, new_frame_;
+  std_msgs::msg::Header last_header_;
 
   /* Internal state variables */
+  std::vector<cv::Point> aruco_centers_;
   bool is_on_ = false;
   bool get_calibration_params_ = true;
   cv::Mat cameraMatrix, distCoeffs, objPoints;
@@ -137,9 +145,14 @@ private:
   int64_t worker_cpu = 0;
 
   /* Synchronization primitives for internal update operations */
-  std::mutex camera_info_lock_;
+  std::atomic<bool> running_;
+  sem_t sem1_, sem2_;
+
+  /* Threads */
+  std::thread worker_;
 
   /* Utility routines */
+  void worker_thread_routine();
   Image::SharedPtr frame_to_msg(cv::Mat & frame);
   float round_angle(float num, float prec);
   float round_space(float num, float prec);

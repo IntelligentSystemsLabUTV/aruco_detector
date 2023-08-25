@@ -37,6 +37,8 @@ namespace ArucoDetector
 void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
                                         const CameraInfo::ConstSharedPtr & camera_info_msg)
 {
+  std::cout << __LINE__ << std::endl;
+
   // Get camera parameters
   if (get_calibration_params_)
   {
@@ -60,118 +62,19 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     get_calibration_params_ = false;
   }
 
+  std::cout << __LINE__ << std::endl;
+
+  sem_wait(&sem1_);
   // Convert msg to OpenCV image
-  cv::Mat new_frame(
+  new_frame_ = cv::Mat(
     msg->height,
     msg->width,
     CV_8UC3,
     (void *)(msg->data.data()));
+  last_header_ = msg->header;
+  sem_post(&sem2_);
 
-  // Detect targets
-  std::vector<int> markerIds;
-  std::vector<std::vector<cv::Point2f>> markerCorners;
-
-  // TODO: add other dictionaries
-  cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
-
-  // Set detector parameters
-  cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
-  detectorParams.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
-
-  cv::aruco::ArucoDetector detector(dictionary, detectorParams);
-  detector.detectMarkers(new_frame, markerCorners, markerIds);
-
-  // Remove markers with IDs in the exclusion list
-  for (int64_t id : excluded_ids)
-  {
-    auto iterId = std::remove(markerIds.begin(), markerIds.end(), id);
-    auto iterCorn = markerCorners.begin() + std::distance(markerIds.begin(), iterId);
-
-    // Remove elements from both arrays
-    markerIds.erase(iterId, markerIds.end());
-    markerCorners.erase(iterCorn, markerCorners.end());
-  }
-
-  // Return if no target is detected
-  if (markerIds.size() == 0) return;
-
-  std::vector<cv::Vec3d> rvecs(markerIds.size()), tvecs(markerIds.size());
-
-  // Publish information about detected targets
-  aruco_centers_.clear();
-  TargetArray target_array_msg{};
-
-  for (int k = 0; k < int(markerIds.size()); k++)
-  {
-    // Compute Aruco center
-    square_center_2d(markerCorners[k], aruco_centers_);
-
-    // Calculate pose for each marker
-    solvePnP(objPoints, markerCorners[k], cameraMatrix, distCoeffs, rvecs[k], tvecs[k]);
-
-    // Prepare messages to be published
-    // Populate TargetID
-    TargetID target_id{};
-    target_id.set__int_id(markerIds[k]);
-    target_id.set__str_id(msg->header.frame_id);
-
-    Pose target_pose{};
-    target_pose.position.set__x(tvecs[k][0]);
-    target_pose.position.set__y(tvecs[k][1]);
-    target_pose.position.set__z(tvecs[k][2]);
-    rodrToQuat(rvecs[k], target_pose);
-
-    // Populate Target message
-    Target target{};
-    target.set__header(msg->header);
-    target.set__target_id(target_id);
-    target.set__pose(target_pose);
-
-    target_array_msg.targets.push_back(target);
-  }
-  target_array_pub_->publish(target_array_msg);
-
-  // Draw search output, ROI and HUD in another image
-  cv::aruco::drawDetectedMarkers(new_frame, markerCorners, markerIds);
-
-  // Draw axis for each marker
-  for(int i = 0; i < int(markerIds.size()); i++)
-    cv::drawFrameAxes(new_frame, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
-
-  camera_frame_ = new_frame; // Doesn't copy image data, but sets data type...
-
-  // cv::Point rect_p1(
-  //   (camera_frame_.size().width / 2) - (centering_width / 2),
-  //   (camera_frame_.size().height / 2) - (centering_width / 2));
-  // cv::Point rect_p2(
-  //   (camera_frame_.size().width / 2) + (centering_width / 2),
-  //   (camera_frame_.size().height / 2) + (centering_width / 2));
-
-  // cv::Point crosshair_p(
-  //   camera_frame_.size().width / 2,
-  //   camera_frame_.size().height / 2);
-
-  // cv::rectangle(
-  //   camera_frame_,
-  //   rect_p1,
-  //   rect_p2,
-  //   cv::Scalar(0, 255, 0),
-  //   5);
-  // cv::drawMarker(
-  //   camera_frame_,
-  //   crosshair_p,
-  //   cv::Scalar(0, 255, 0),
-  //   cv::MARKER_CROSS,
-  //   15,
-  //   3);
-
-  // Publish rate message and processed image
-  Empty rate_msg{};
-  camera_rate_pub_->publish(rate_msg);
-
-  Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
-  processed_image_msg->set__header(msg->header);
-  stream_pub_->publish(processed_image_msg);
+  std::cout << __LINE__ << std::endl;
 }
 
 } // namespace ArucoDetector
