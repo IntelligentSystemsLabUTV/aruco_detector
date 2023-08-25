@@ -134,6 +134,7 @@ private:
   std::string output_topic = "";
   std::string stream_topic = "";
   std::string transport = "";
+  int64_t worker_cpu = 0;
 
   /* Synchronization primitives for internal update operations */
   std::mutex camera_info_lock_;

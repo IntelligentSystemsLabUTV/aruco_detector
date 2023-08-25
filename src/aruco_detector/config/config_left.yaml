@@ -13,3 +13,4 @@
     output_topic: /seppia/aruco_detector/targets
     stream_topic: /gui_3
     transport: compressed
+    worker_cpu: 4

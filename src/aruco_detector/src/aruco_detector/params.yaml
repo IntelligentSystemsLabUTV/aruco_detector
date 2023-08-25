@@ -94,3 +94,14 @@ params:
     constraints: "Cannot be changed."
     read_only: true
     var_name: transport
+
+  worker_cpu:
+    type: integer
+    default_value: 1
+    min_value: 0
+    max_value: 255
+    step: 1
+    description: "CPU on which the worker will be pinned."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: worker_cpu
