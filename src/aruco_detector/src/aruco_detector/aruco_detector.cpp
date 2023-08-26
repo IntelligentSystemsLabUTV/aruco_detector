@@ -45,9 +45,6 @@ ArucoDetectorNode::ArucoDetectorNode(const rclcpp::NodeOptions & node_options)
   // Initialize atomic members
   init_atomics();
 
-  // Initialize callback groups
-  init_cgroups();
-
   // Initialize node parameters
   init_parameters();
 
@@ -86,15 +83,6 @@ ArucoDetectorNode::~ArucoDetectorNode()
 void ArucoDetectorNode::init_atomics()
 {
   running_.store(false, std::memory_order_release);
-}
-
-/**
- * @brief Routine to initialize callback groups.
- */
-void ArucoDetectorNode::init_cgroups()
-{
-  pose_cgroup_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  enable_cgroup_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 }
 
 /**
@@ -184,8 +172,7 @@ void ArucoDetectorNode::init_services()
       this,
       std::placeholders::_1,
       std::placeholders::_2),
-    rmw_qos_profile_services_default,
-    enable_cgroup_);
+    rmw_qos_profile_services_default);
 }
 
 } // namespace ArucoDetector

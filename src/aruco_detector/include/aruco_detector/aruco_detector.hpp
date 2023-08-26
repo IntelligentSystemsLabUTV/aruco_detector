@@ -84,14 +84,10 @@ public:
 private:
   /* Node initialization routines */
   void init_atomics();
-  void init_cgroups();
   void init_parameters();
   void init_publishers();
   void init_services();
   void init_subscriptions();
-
-  /* Topic subscriptions callback groups */
-  rclcpp::CallbackGroup::SharedPtr pose_cgroup_;
 
   /* image_transport subscriptions */
   std::shared_ptr<image_transport::CameraSubscriber> camera_sub_;

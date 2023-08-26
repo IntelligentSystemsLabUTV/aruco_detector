@@ -171,13 +171,13 @@ void ArucoDetectorNode::worker_thread_routine()
   std::cout << "\t\t\t\t" << __LINE__ << std::endl;
   while (true)
   {
-    cv::Mat image_{};
     std_msgs::msg::Header header_;
+    cv::Mat image_{};
     std::cout << "\t\t\t\t" << __LINE__ << std::endl;
     sem_wait(&sem2_);
     if (!running_.load(std::memory_order_acquire))
       break;
-    new_frame_.copyTo(image_);
+    image_ = new_frame_.clone();
     header_ = last_header_;
     sem_post(&sem1_);
 

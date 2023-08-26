@@ -64,13 +64,15 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
 
   std::cout << __LINE__ << std::endl;
 
-  sem_wait(&sem1_);
   // Convert msg to OpenCV image
-  new_frame_ = cv::Mat(
+  cv::Mat frame = cv::Mat(
     msg->height,
     msg->width,
     CV_8UC3,
     (void *)(msg->data.data()));
+
+  sem_wait(&sem1_);
+  new_frame_ = frame.clone();
   last_header_ = msg->header;
   sem_post(&sem2_);
 
