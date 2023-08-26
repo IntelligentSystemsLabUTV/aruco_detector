@@ -168,20 +168,16 @@ void ArucoDetectorNode::square_center_2d(std::vector<cv::Point2f> corners,
  */
 void ArucoDetectorNode::worker_thread_routine()
 {
-  std::cout << "\t\t\t\t" << __LINE__ << std::endl;
   while (true)
   {
     std_msgs::msg::Header header_;
     cv::Mat image_{};
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
     sem_wait(&sem2_);
     if (!running_.load(std::memory_order_acquire))
       break;
     image_ = new_frame_.clone();
     header_ = last_header_;
     sem_post(&sem1_);
-
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
 
     // Detect targets
     std::vector<int> markerIds;
@@ -190,34 +186,22 @@ void ArucoDetectorNode::worker_thread_routine()
     // TODO: add other dictionaries
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
 
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
-
     // Set detector parameters
     cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
     detectorParams.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
     cv::aruco::ArucoDetector detector(dictionary, detectorParams);
-std::cout << "\t\t\t\t" << __LINE__ << std::endl;
-std::cout << "\t\t\t\t"  << image_.size() << std::endl;
-    try {
-      detector.detectMarkers(image_, markerCorners, markerIds);
-    } catch (cv::Exception & e) {
-      std::cout << "\t\t\t\t" << e.what() << std::endl;
-      continue;
-    }
-std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+    detector.detectMarkers(image_, markerCorners, markerIds);
+
     // Remove markers with IDs in the exclusion list
     for (int64_t id : excluded_ids)
     {
       auto iterId = std::remove(markerIds.begin(), markerIds.end(), id);
       auto iterCorn = markerCorners.begin() + std::distance(markerIds.begin(), iterId);
-std::cout << "\t\t\t\t" << __LINE__ << std::endl;
+
       // Remove elements from both arrays
       markerIds.erase(iterId, markerIds.end());
       markerCorners.erase(iterCorn, markerCorners.end());
-      std::cout << "\t\t\t\t" << __LINE__ << std::endl;
     }
-
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
 
     // Return if no target is detected
     if (markerIds.size() == 0) continue;
@@ -227,8 +211,6 @@ std::cout << "\t\t\t\t" << __LINE__ << std::endl;
     // Publish information about detected targets
     aruco_centers_.clear();
     TargetArray target_array_msg{};
-
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
 
     for (int k = 0; k < int(markerIds.size()); k++)
     {
@@ -260,22 +242,14 @@ std::cout << "\t\t\t\t" << __LINE__ << std::endl;
     }
     target_array_pub_->publish(target_array_msg);
 
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
-
     // Draw search output, ROI and HUD in another image
     cv::aruco::drawDetectedMarkers(image_, markerCorners, markerIds);
-
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
 
     // Draw axis for each marker
     for(int i = 0; i < int(markerIds.size()); i++)
       cv::drawFrameAxes(image_, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
 
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
-
     camera_frame_ = image_; // Doesn't copy image data, but sets data type...
-
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
 
     // cv::Point rect_p1(
     //   (camera_frame_.size().width / 2) - (centering_width / 2),
@@ -306,13 +280,9 @@ std::cout << "\t\t\t\t" << __LINE__ << std::endl;
     Empty rate_msg{};
     camera_rate_pub_->publish(rate_msg);
 
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
-
     Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
     processed_image_msg->set__header(header_);
     stream_pub_->publish(processed_image_msg);
-
-    std::cout << "\t\t\t\t" << __LINE__ << std::endl;
   }
 
   RCLCPP_WARN(this->get_logger(), "Thread stopped");

@@ -37,8 +37,6 @@ namespace ArucoDetector
 void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
                                         const CameraInfo::ConstSharedPtr & camera_info_msg)
 {
-  std::cout << __LINE__ << std::endl;
-
   // Get camera parameters
   if (get_calibration_params_)
   {
@@ -62,8 +60,6 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     get_calibration_params_ = false;
   }
 
-  std::cout << __LINE__ << std::endl;
-
   // Convert msg to OpenCV image
   cv::Mat frame = cv::Mat(
     msg->height,
@@ -75,8 +71,6 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
   new_frame_ = frame.clone();
   last_header_ = msg->header;
   sem_post(&sem2_);
-
-  std::cout << __LINE__ << std::endl;
 }
 
 } // namespace ArucoDetector
