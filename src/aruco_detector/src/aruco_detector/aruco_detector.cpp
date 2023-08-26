@@ -67,10 +67,22 @@ ArucoDetectorNode::ArucoDetectorNode(const rclcpp::NodeOptions & node_options)
 ArucoDetectorNode::~ArucoDetectorNode()
 {
   // Unsubscribe from image topics
-  if (is_on_) {
-    is_on_ = false;
+  if (running_.load(std::memory_order_acquire))
+  {
+    // Deactivate thread
+    running_.store(false, std::memory_order_release);
+    sem_post(&sem1_);
+    sem_post(&sem2_);
+    worker_.join();
+
+    // Shutdown camera subscriber
     camera_sub_->shutdown();
     camera_sub_.reset();
+
+    // Destroy semaphores
+    sem_destroy(&sem1_);
+    sem_destroy(&sem2_);
+
   }
   target_img_pub_->shutdown();
   target_img_pub_.reset();
@@ -92,8 +104,6 @@ void ArucoDetectorNode::init_subscriptions()
 {
   if (autostart)
   {
-    is_on_ = true;
-
     // Initialize semaphores
     sem_init(&sem1_, 0, 1);
     sem_init(&sem2_, 0, 0);

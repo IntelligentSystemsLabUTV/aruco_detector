@@ -123,7 +123,6 @@ private:
 
   /* Internal state variables */
   std::vector<cv::Point> aruco_centers_;
-  bool is_on_ = false;
   bool get_calibration_params_ = true;
   cv::Mat cameraMatrix, distCoeffs, objPoints;
 

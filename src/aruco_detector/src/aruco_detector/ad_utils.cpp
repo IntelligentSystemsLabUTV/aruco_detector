@@ -314,6 +314,8 @@ std::cout << "\t\t\t\t" << __LINE__ << std::endl;
 
     std::cout << "\t\t\t\t" << __LINE__ << std::endl;
   }
+
+  RCLCPP_WARN(this->get_logger(), "Thread stopped");
 }
 
 
