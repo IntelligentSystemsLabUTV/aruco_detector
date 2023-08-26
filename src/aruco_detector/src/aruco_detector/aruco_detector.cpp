@@ -69,6 +69,7 @@ ArucoDetectorNode::~ArucoDetectorNode()
   // Unsubscribe from image topics
   if (running_.load(std::memory_order_acquire))
   {
+    RCLCPP_WARN(this->get_logger(), "Destructor");
     // Deactivate thread
     running_.store(false, std::memory_order_release);
     sem_post(&sem1_);
@@ -84,8 +85,6 @@ ArucoDetectorNode::~ArucoDetectorNode()
     sem_destroy(&sem2_);
 
   }
-  target_img_pub_->shutdown();
-  target_img_pub_.reset();
   stream_pub_.reset();
 }
 

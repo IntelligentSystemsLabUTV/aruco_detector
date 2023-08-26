@@ -286,6 +286,7 @@ void ArucoDetectorNode::worker_thread_routine()
   }
 
   RCLCPP_WARN(this->get_logger(), "Thread stopped");
+  return;
 }
 
 

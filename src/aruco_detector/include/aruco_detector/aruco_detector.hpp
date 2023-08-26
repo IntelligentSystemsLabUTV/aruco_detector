@@ -100,9 +100,6 @@ private:
   rclcpp::Publisher<Empty>::SharedPtr camera_rate_pub_;
   rclcpp::Publisher<TargetArray>::SharedPtr target_array_pub_;
 
-  /* image_transport publishers */
-  std::shared_ptr<image_transport::Publisher> target_img_pub_;
-
   /* Theora stream publishers. */
   std::shared_ptr<TheoraWrappers::Publisher> stream_pub_;
 
