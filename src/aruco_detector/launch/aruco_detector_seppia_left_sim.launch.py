@@ -25,7 +25,7 @@ def generate_launch_description():
     config = os.path.join(
         get_package_share_directory('aruco_detector'),
         'config',
-        'config_right.yaml'
+        'config_left_sim.yaml'
     )
 
     # Declare launch arguments

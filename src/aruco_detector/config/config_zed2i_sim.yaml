@@ -1,6 +1,6 @@
 /seppia/aruco_detector:
   ros__parameters:
-    aruco_side: 0.1537
+    aruco_side: 0.15
     autostart: true
     base_frame: seppia/base_footprint
     best_effort_sub_qos: true
@@ -9,8 +9,8 @@
       - 0
       - 1023
     image_sub_depth: 3
-    input_topic: /seppia/slam/zed_2i_driver/left/image_rect_color
-    output_topic: /seppia/aruco/targets
+    input_topic: /seppia/zed2i_left_camera/image_raw
+    output_topic: /seppia/aruco_detector/targets
     stream_topic: /gui_1
     transport: compressed
     worker_cpu: 1
