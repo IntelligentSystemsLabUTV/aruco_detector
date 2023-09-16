@@ -10,7 +10,7 @@
       - 1023
     image_sub_depth: 3
     input_topic: /seppia/zed2i_left_camera/image_raw
-    output_topic: /seppia/aruco_detector/targets
+    output_topic: /seppia/aruco/targets
     stream_topic: /gui_1
     transport: compressed
     worker_cpu: 1
