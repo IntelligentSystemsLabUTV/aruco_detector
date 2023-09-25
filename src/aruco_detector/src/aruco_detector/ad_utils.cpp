@@ -58,40 +58,6 @@ Image::SharedPtr ArucoDetectorNode::frame_to_msg(cv::Mat & frame)
 }
 
 /**
- * @brief Function to round spatial measure to a fixed precision.
- *
- * @param num Value to round.
- * @param prec 100 -> centimeter, 1000 -> mm
- * @return Rounded value.
- */
-float ArucoDetectorNode::round_space(float num, float prec)
-{
-  num *= prec;
-  num = floor(num);
-  num /= prec;
-
-  return num;
-}
-
-/**
- * @brief Function to round angular measure to a fixed precision.
- *
- * @param num Value to round.
- * @param prec 10 -> tenth of a degree
- * @return Rounded value.
- */
-float ArucoDetectorNode::round_angle(float num, float prec)
-{
-  num = num * 180.0 / M_PIf32;
-
-  num *= prec;
-  num = floor(num);
-  num /= prec;
-
-  return num * M_PIf32 / 180.0;
-}
-
-/**
  * @brief Function to convert Rodrigues' vector to quaternion.
  *
  * @param r Vector in Rodrigues' form (axis-angle).
