@@ -24,12 +24,11 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef ARUCO_DETECTOR_HPP
-#define ARUCO_DETECTOR_HPP
+#ifndef ARUCO_DETECTOR__ARUCO_DETECTOR_HPP
+#define ARUCO_DETECTOR__ARUCO_DETECTOR_HPP
 
-
-#include <atomic>
 #include <algorithm>
+#include <atomic>
 #include <iterator>
 #include <stdexcept>
 #include <thread>
@@ -73,7 +72,7 @@ namespace ArucoDetector
 {
 
 /**
- * Main target detection node.
+ * ArUco marker detection node.
  */
 class ArucoDetectorNode : public DUANode::NodeBase
 {
@@ -83,7 +82,6 @@ public:
 
 private:
   /* Node initialization routines */
-  void init_atomics();
   void init_parameters();
   void init_publishers();
   void init_services();
@@ -97,7 +95,6 @@ private:
                        const CameraInfo::ConstSharedPtr & camera_info_msg);
 
   /* Topic publishers */
-  rclcpp::Publisher<Empty>::SharedPtr camera_rate_pub_;
   rclcpp::Publisher<TargetArray>::SharedPtr target_array_pub_;
 
   /* Theora stream publishers. */
@@ -124,20 +121,19 @@ private:
   cv::Mat cameraMatrix, distCoeffs, objPoints;
 
   /* Node parameters */
-  double aruco_side = 0.0;
-  bool autostart = false;
-  bool best_effort_sub_qos = false;
-  int64_t centering_width = 0;
-  std::vector<int64_t> excluded_ids;
-  int64_t image_sub_depth = 0;
-  std::string input_topic = "";
-  std::string output_topic = "";
-  std::string stream_topic = "";
-  std::string transport = "";
-  int64_t worker_cpu = 0;
+  double aruco_side_ = 0.0;
+  bool autostart_ = false;
+  bool best_effort_sub_qos_ = false;
+  std::vector<int64_t> excluded_ids_;
+  int64_t image_sub_depth_ = 0;
+  std::string input_topic_ = "";
+  std::string output_topic_ = "";
+  std::string stream_topic_ = "";
+  std::string transport_ = "";
+  int64_t worker_cpu_ = 0;
 
   /* Synchronization primitives for internal update operations */
-  std::atomic<bool> running_;
+  std::atomic<bool> running_{false};
   sem_t sem1_, sem2_;
 
   /* Threads */
@@ -152,4 +148,4 @@ private:
 
 } // namespace ArucoDetector
 
-#endif // ARUCO_DETECTOR_HPP
+#endif // ARUCO_DETECTOR__ARUCO_DETECTOR_HPP
