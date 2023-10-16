@@ -3,7 +3,7 @@
 <package format="3">
   <name>aruco_detector</name>
   <version>1.0.0</version>
-  <description>Target detection module.</description>
+  <description>ArUco marker detection module.</description>
   <maintainer email="isl.torvergata@gmail.com">Intelligent Systems Lab</maintainer>
   <license>GNU GPL v3.0</license>
 

@@ -30,32 +30,35 @@ namespace ArucoDetector
 {
 
 /**
- * @brief Searches targets in a new image.
+ * @brief Parses a new image message.
  *
  * @param msg Image message to parse.
  */
-void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
-                                        const CameraInfo::ConstSharedPtr & camera_info_msg)
+void ArucoDetectorNode::camera_callback(
+  const Image::ConstSharedPtr & msg,
+  const CameraInfo::ConstSharedPtr & camera_info_msg)
 {
   // Get camera parameters
-  if (get_calibration_params_)
-  {
+  if (get_calibration_params_) {
     cameraMatrix = cv::Mat(3, 3, cv::DataType<double>::type);
     distCoeffs = cv::Mat(1, 5, cv::DataType<double>::type);
 
-    for (size_t i = 0; i < 3; i++)
-      for (size_t j = 0; j < 3; j++)
-        cameraMatrix.at<double>(i, j) = camera_info_msg->k[i*3+j];
+    for (size_t i = 0; i < 3; i++) {
+      for (size_t j = 0; j < 3; j++) {
+        cameraMatrix.at<double>(i, j) = camera_info_msg->k[i * 3 + j];
+      }
+    }
 
-    for (size_t i = 0; i < 5; i++)
+    for (size_t i = 0; i < 5; i++) {
       distCoeffs.at<double>(0, i) = camera_info_msg->d[i];
+    }
 
     // Set coordinate system
     objPoints = cv::Mat(4, 1, CV_32FC3);
-    objPoints.ptr<cv::Vec3f>(0)[0] = cv::Vec3f(-aruco_side/2.f,  aruco_side/2.f, 0);
-    objPoints.ptr<cv::Vec3f>(0)[1] = cv::Vec3f( aruco_side/2.f,  aruco_side/2.f, 0);
-    objPoints.ptr<cv::Vec3f>(0)[2] = cv::Vec3f( aruco_side/2.f, -aruco_side/2.f, 0);
-    objPoints.ptr<cv::Vec3f>(0)[3] = cv::Vec3f(-aruco_side/2.f, -aruco_side/2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[0] = cv::Vec3f(-aruco_side_ / 2.f, aruco_side_ / 2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[1] = cv::Vec3f(aruco_side_ / 2.f, aruco_side_ / 2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[2] = cv::Vec3f(aruco_side_ / 2.f, -aruco_side_ / 2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[3] = cv::Vec3f(-aruco_side_ / 2.f, -aruco_side_ / 2.f, 0);
 
     get_calibration_params_ = false;
   }
@@ -67,6 +70,7 @@ void ArucoDetectorNode::camera_callback(const Image::ConstSharedPtr & msg,
     CV_8UC3,
     (void *)(msg->data.data()));
 
+  // Pass data to worker thread
   sem_wait(&sem1_);
   new_frame_ = frame.clone();
   last_header_ = msg->header;

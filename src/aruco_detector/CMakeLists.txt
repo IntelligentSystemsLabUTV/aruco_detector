@@ -19,7 +19,7 @@ endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
-# find dependencies
+# Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(dua_app_management REQUIRED)
 find_package(dua_interfaces REQUIRED)
@@ -27,7 +27,7 @@ find_package(dua_node REQUIRED)
 find_package(dua_qos REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(image_transport REQUIRED)
-find_package(OpenCV 4.5.5 REQUIRED)
+find_package(OpenCV 4.7.0 REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(Threads REQUIRED)
 find_package(params_manager REQUIRED)
@@ -42,21 +42,16 @@ generate_init_parameters(
   YAML_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/aruco_detector/params.yaml"
   OUT_FILE "init_parameters.cpp")
 
-# Configure Aruco Detector node source files
+# Configure ArUco Detector node source files
 file(GLOB ARUCO_DETECTOR_NODE_SRCS
   RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "src/aruco_detector/*.cpp")
 list(APPEND ARUCO_DETECTOR_NODE_SRCS init_parameters.cpp)
 
 
-# Aruco Detector node
+# ArUco Detector node
 add_library(aruco_detector SHARED ${ARUCO_DETECTOR_NODE_SRCS})
 target_compile_definitions(aruco_detector PRIVATE COMPOSITION_BUILDING_DLL)
-if (CUDA_FOUND AND OpenCV_CUDA_VERSION)
-  message(STATUS "OpenCV was built with CUDA version: ${OpenCV_CUDA_VERSION}")
-  message(STATUS "Compiling code with cv::cuda API")
-  target_compile_definitions(aruco_detector PUBLIC WITH_CUDA)
-endif()
 target_include_directories(aruco_detector PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -80,7 +75,7 @@ ament_target_dependencies(aruco_detector
   "theora_wrappers")
 rclcpp_components_register_nodes(aruco_detector "ArucoDetector::ArucoDetectorNode")
 
-# Aruco Detector standalone application
+# ArUco Detector standalone application
 add_executable(aruco_detector_app
   src/aruco_detector_app.cpp)
 target_include_directories(aruco_detector_app PUBLIC
@@ -92,13 +87,13 @@ ament_target_dependencies(aruco_detector_app
   "dua_app_management"
   "rclcpp")
 
-# Install Teraranger component
+# Install ArUco Detector component
 install(TARGETS aruco_detector
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
-# Install Aruco Detector app
+# Install ArUco Detector app
 install(TARGETS aruco_detector_app
   DESTINATION lib/${PROJECT_NAME})
 

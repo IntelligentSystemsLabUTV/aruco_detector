@@ -1,0 +1,14 @@
+/aruco_detector:
+  ros__parameters:
+    aruco_side: 0.15
+    autostart: true
+    best_effort_sub_qos: true
+    excluded_ids:
+      - 0
+      - 1023
+    image_sub_depth: 1
+    input_topic: /camera/image_color
+    output_topic: /targets
+    stream_topic: /targets_stream
+    transport: raw
+    worker_cpu: -1
