@@ -1,5 +1,5 @@
 """
-Bottom Aruco Detector launch file.
+ArUco Detector launch file.
 
 Lorenzo Bianchi <lnz.bnc@gmail.com>
 Roberto Masocco <robmasocco@gmail.com>
@@ -18,14 +18,13 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    """Builds a LaunchDescription for the bottom Detector"""
     ld = LaunchDescription()
 
     # Build config file path
     config = os.path.join(
         get_package_share_directory('aruco_detector'),
         'config',
-        'config_zed2i.yaml'
+        'aruco_detector.yaml'
     )
 
     # Declare launch arguments
@@ -33,7 +32,7 @@ def generate_launch_description():
     cf = LaunchConfiguration('cf')
     ns_launch_arg = DeclareLaunchArgument(
         'namespace',
-        default_value='seppia'
+        default_value=''
     )
     cf_launch_arg = DeclareLaunchArgument(
         'cf',
@@ -47,7 +46,6 @@ def generate_launch_description():
         package='aruco_detector',
         executable='aruco_detector_app',
         namespace=ns,
-        exec_name='aruco_detector_app',
         emulate_tty=True,
         output='both',
         log_cmd=True,

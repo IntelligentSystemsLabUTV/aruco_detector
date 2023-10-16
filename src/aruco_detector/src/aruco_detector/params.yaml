@@ -70,7 +70,7 @@ params:
 
   stream_topic:
     type: string
-    default_value: /stream_topic
+    default_value: /targets_stream
     description: "Topic name to publish target detection images."
     constraints: "Cannot be changed."
     read_only: true
