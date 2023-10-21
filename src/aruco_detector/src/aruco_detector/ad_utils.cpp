@@ -63,7 +63,7 @@ Image::SharedPtr ArucoDetectorNode::frame_to_msg(cv::Mat & frame)
  * @param r Vector in Rodrigues' form (axis-angle).
  * @param target_pose Pose message to fill.
  */
-void ArucoDetectorNode::rodrToQuat(cv::Vec3d r, Pose & target_pose)
+void ArucoDetectorNode::rodr_to_quat(cv::Vec3d r, Pose & target_pose)
 {
   double w, x, y, z;
   double angle = cv::norm(r);

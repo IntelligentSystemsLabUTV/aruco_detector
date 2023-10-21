@@ -41,6 +41,7 @@
 #include <dua_interfaces/msg/target.hpp>
 #include <dua_interfaces/msg/target_array.hpp>
 #include <dua_interfaces/msg/target_id.hpp>
+#include <dua_interfaces/msg/visual_targets.hpp>
 
 #include <opencv2/aruco.hpp>
 #include <opencv2/core.hpp>
@@ -96,6 +97,7 @@ private:
 
   /* Topic publishers */
   rclcpp::Publisher<TargetArray>::SharedPtr target_array_pub_;
+  rclcpp::Publisher<VisualTargets>::SharedPtr visual_targets_pub_;
 
   /* Theora stream publishers. */
   std::shared_ptr<TheoraWrappers::Publisher> stream_pub_;
@@ -130,6 +132,7 @@ private:
   std::string output_topic_ = "";
   std::string stream_topic_ = "";
   std::string transport_ = "";
+  std::string visual_data_topic_ = "";
   int64_t worker_cpu_ = 0;
 
   /* Synchronization primitives for internal update operations */
@@ -142,7 +145,7 @@ private:
   /* Utility routines */
   void worker_thread_routine();
   Image::SharedPtr frame_to_msg(cv::Mat & frame);
-  void rodrToQuat(cv::Vec3d r, Pose & target_pose);
+  void rodr_to_quat(cv::Vec3d r, Pose & target_pose);
   void square_center_2d(std::vector<cv::Point2f> corners, std::vector<cv::Point>& aruco_centers);
 };
 

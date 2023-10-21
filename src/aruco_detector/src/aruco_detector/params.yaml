@@ -84,6 +84,14 @@ params:
     read_only: true
     var_name: transport_
 
+  visual_data_topic:
+    type: string
+    default_value: /visual_targets
+    description: "Topic name to publish markers visual data on."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: visual_data_topic_
+
   worker_cpu:
     type: integer
     default_value: -1

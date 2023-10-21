@@ -132,6 +132,11 @@ void ArucoDetectorNode::init_publishers()
     output_topic_,
     DUAQoS::get_datum_qos());
 
+  // Visual targets data
+  visual_targets_pub_ = this->create_publisher<VisualTargets>(
+    visual_data_topic_,
+    DUAQoS::get_datum_qos());
+
   // Targets detection stream
   stream_pub_ = std::make_shared<TheoraWrappers::Publisher>(
     this,
@@ -219,7 +224,7 @@ void ArucoDetectorNode::worker_thread_routine()
       target_pose.position.set__x(tvecs[k][0]);
       target_pose.position.set__y(tvecs[k][1]);
       target_pose.position.set__z(tvecs[k][2]);
-      rodrToQuat(rvecs[k], target_pose);
+      rodr_to_quat(rvecs[k], target_pose);
 
       // Populate Target message
       Target target{};
@@ -241,9 +246,17 @@ void ArucoDetectorNode::worker_thread_routine()
 
     camera_frame_ = image_; // Doesn't copy image data, but sets data type...
 
-    // Publish processed image
+    // Create processed image message
     Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
     processed_image_msg->set__header(header_);
+
+    // Publish visual targets data
+    VisualTargets visual_targets_msg{};
+    visual_targets_msg.set__targets(target_array_msg.targets);
+    visual_targets_msg.set__image(*processed_image_msg);
+    visual_targets_pub_->publish(visual_targets_msg);
+
+    // Publish processed image
     stream_pub_->publish(processed_image_msg);
   }
 
