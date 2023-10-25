@@ -190,29 +190,19 @@ void ArucoDetectorNode::worker_thread_routine()
     cv::aruco::ArucoDetector detector(dictionary, detectorParams);
     detector.detectMarkers(image_, markerCorners, markerIds);
 
-    // Remove markers with IDs in the exclusion list
-    for (int64_t id : excluded_ids_) {
-      auto iterId = std::remove(markerIds.begin(), markerIds.end(), id);
-      auto iterCorn = markerCorners.begin() + std::distance(markerIds.begin(), iterId);
-
-      // Remove elements from both arrays
-      markerIds.erase(iterId, markerIds.end());
-      markerCorners.erase(iterCorn, markerCorners.end());
-    }
-
     // Return if no target is detected
     if (markerIds.size() == 0) {continue;}
 
     std::vector<cv::Vec3d> rvecs(markerIds.size()), tvecs(markerIds.size());
 
     // Publish information about detected targets
-    aruco_centers_.clear(); // TODO What to do with this?
     TargetArray target_array_msg{};
     for (int k = 0; k < int(markerIds.size()); k++) {
-      // Compute marker center
-      square_center_2d(markerCorners[k], aruco_centers_);
+      // Continue if target is not valid
+      if (std::find(valid_ids_.begin(), valid_ids_.end(), markerIds[k]) == valid_ids_.end())
+        continue;
 
-      // Calculate pose for each marker
+      // Calculate pose for each valid marker
       solvePnP(objPoints, markerCorners[k], cameraMatrix, distCoeffs, rvecs[k], tvecs[k]);
 
       // Prepare messages to be published

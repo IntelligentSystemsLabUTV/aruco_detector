@@ -118,7 +118,6 @@ private:
   std_msgs::msg::Header last_header_;
 
   /* Internal state variables */
-  std::vector<cv::Point> aruco_centers_;
   bool get_calibration_params_ = true;
   cv::Mat cameraMatrix, distCoeffs, objPoints;
 
@@ -126,7 +125,7 @@ private:
   double aruco_side_ = 0.0;
   bool autostart_ = false;
   bool best_effort_sub_qos_ = false;
-  std::vector<int64_t> excluded_ids_;
+  std::vector<int64_t> valid_ids_;
   int64_t image_sub_depth_ = 0;
   std::string input_topic_ = "";
   std::string output_topic_ = "";
@@ -146,7 +145,6 @@ private:
   void worker_thread_routine();
   Image::SharedPtr frame_to_msg(cv::Mat & frame);
   void rodr_to_quat(cv::Vec3d r, Pose & target_pose);
-  void square_center_2d(std::vector<cv::Point2f> corners, std::vector<cv::Point>& aruco_centers);
 };
 
 } // namespace ArucoDetector

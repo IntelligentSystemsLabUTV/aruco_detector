@@ -30,17 +30,6 @@ params:
     read_only: true
     var_name: best_effort_sub_qos_
 
-  excluded_ids:
-    type: integer_array
-    default_value: [0]
-    min_value: 0
-    max_value: 10000
-    step: 1
-    description: "List of Arucos to be excluded."
-    constraints: "Cannot be changed."
-    read_only: true
-    var_name: excluded_ids_
-
   image_sub_depth:
     type: integer
     default_value: 1
@@ -91,6 +80,17 @@ params:
     constraints: "Cannot be changed."
     read_only: true
     var_name: visual_data_topic_
+
+  valid_ids:
+    type: integer_array
+    default_value: [0]
+    min_value: 0
+    max_value: 10000
+    step: 1
+    description: "List of valid Arucos."
+    constraints: "Cannot be changed."
+    read_only: false
+    var_name: valid_ids_
 
   worker_cpu:
     type: integer
