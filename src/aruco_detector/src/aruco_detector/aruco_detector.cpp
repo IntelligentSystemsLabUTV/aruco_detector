@@ -195,12 +195,16 @@ void ArucoDetectorNode::worker_thread_routine()
 
     std::vector<cv::Vec3d> rvecs(markerIds.size()), tvecs(markerIds.size());
 
+    int n_valid_arucos = 0;
+
     // Publish information about detected targets
     TargetArray target_array_msg{};
     for (int k = 0; k < int(markerIds.size()); k++) {
       // Continue if target is not valid
       if (std::find(valid_ids_.begin(), valid_ids_.end(), markerIds[k]) == valid_ids_.end())
         continue;
+
+      n_valid_arucos++;
 
       // Calculate pose for each valid marker
       solvePnP(objPoints, markerCorners[k], cameraMatrix, distCoeffs, rvecs[k], tvecs[k]);
@@ -224,30 +228,33 @@ void ArucoDetectorNode::worker_thread_routine()
 
       target_array_msg.targets.push_back(target);
     }
-    target_array_pub_->publish(target_array_msg);
 
-    // Draw search output, ROI and HUD in another image
-    cv::aruco::drawDetectedMarkers(image_, markerCorners, markerIds);
+    if (n_valid_arucos > 0) {
+      target_array_pub_->publish(target_array_msg);
 
-    // Draw axis for each marker
-    for (int i = 0; i < int(markerIds.size()); i++) {
-      cv::drawFrameAxes(image_, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
+      // Draw search output, ROI and HUD in another image
+      cv::aruco::drawDetectedMarkers(image_, markerCorners, markerIds);
+
+      // Draw axis for each marker
+      for (int i = 0; i < int(markerIds.size()); i++) {
+        cv::drawFrameAxes(image_, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
+      }
+
+      camera_frame_ = image_; // Doesn't copy image data, but sets data type...
+
+      // Create processed image message
+      Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
+      processed_image_msg->set__header(header_);
+
+      // Publish visual targets data
+      VisualTargets visual_targets_msg{};
+      visual_targets_msg.set__targets(target_array_msg.targets);
+      visual_targets_msg.set__image(*processed_image_msg);
+      visual_targets_pub_->publish(visual_targets_msg);
+
+      // Publish processed image
+      stream_pub_->publish(processed_image_msg);
     }
-
-    camera_frame_ = image_; // Doesn't copy image data, but sets data type...
-
-    // Create processed image message
-    Image::SharedPtr processed_image_msg = frame_to_msg(camera_frame_);
-    processed_image_msg->set__header(header_);
-
-    // Publish visual targets data
-    VisualTargets visual_targets_msg{};
-    visual_targets_msg.set__targets(target_array_msg.targets);
-    visual_targets_msg.set__image(*processed_image_msg);
-    visual_targets_pub_->publish(visual_targets_msg);
-
-    // Publish processed image
-    stream_pub_->publish(processed_image_msg);
   }
 
   RCLCPP_WARN(this->get_logger(), "Aruco Detector DEACTIVATED");
