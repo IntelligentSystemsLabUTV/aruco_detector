@@ -11,4 +11,5 @@
     valid_ids:
       - 15
       - 23
+    visual_data_topic: /targets_visual
     worker_cpu: -1
